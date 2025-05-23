@@ -1,12 +1,12 @@
 ---
 lab:
   title: AI 에이전트 개발 살펴보기
-  description: Azure AI 파운드리 포털에서 Azure AI 에이전트 서비스 도구를 탐색하여 AI 에이전트를 개발하는 첫 번째 단계를 수행합니다.
+  description: Azure AI 파운드리 포털에서 Azure AI 에이전트 서비스를 살펴보고 AI 에이전트 개발의 첫 번째 단계를 수행합니다.
 ---
 
 # AI 에이전트 개발 살펴보기
 
-이 연습에서는 Azure AI 파운드리 포털의 Azure AI 에이전트 서비스 도구를 사용하여 경비 청구에 대한 질문에 답변하는 간단한 AI 에이전트를 만듭니다.
+이 연습에서는 Azure AI 파운드리 포털의 Azure AI 에이전트 서비스를 사용하여 직원의 비용 청구를 지원하는 간단한 AI 에이전트를 만듭니다.
 
 이 연습에는 약 **30**분이 소요됩니다.
 
@@ -72,7 +72,13 @@ lab:
 
     *Agent123*과 같은 이름의 새 에이전트가 자동으로 생성되어야 합니다(그렇지 않은 경우에는 **+ 새 에이전트** 버튼을 사용하여 생성합니다).
 
-1. 새 에이전트를 선택합니다. 그런 다음, 새 에이전트에 대한 **설정** 창에서 **에이전트 이름**을 `ExpensesAgent`(으)로 설정하여, 이전에 만든 gpt-4o 모델 배포가 선택되었는지 확인하고 **지침**을 `Answer questions related to expense claims`(으)로 설정합니다.
+1. 새 에이전트를 선택합니다. 그런 다음 새 에이전트의 **설정** 창에서 **에이전트 이름**을 `ExpensesAgent`(으)로 설정하고 이전에 만든 gpt-4o 모델 배포가 선택되어 있는지 확인한 다음 **지침**을 다음과 같이 설정합니다.
+
+    ```prompt
+   You are an AI assistant for corporate expenses.
+   You answer questions about expenses based on the expenses policy data.
+   If a user wants to submit an expense claim, you get their email address, a description of the claim, and the amount to be claimed and write the claim details to a text file that the user can download.
+    ```
 
     ![Azure AI 파운드리 포털의 AI 에이전트 설정 페이지 스크린샷.](./Media/ai-agent-setup.png)
 
@@ -83,20 +89,27 @@ lab:
 
 1. **설정** 창의 **지식** 섹션에서 **Expenses_Vector_Store**가 목록으로 나오고 있고 1개의 파일이 포함되어 있는지 확인합니다.
 
-    > **참고**: 작업을 자동화하기 위해 에이전트에 **작업**을 추가할 수도 있습니다. 이 간단한 정보 검색 에이전트 예제에서는 별도의 작업이 필요하지 않습니다.
+1. **지식** 섹션 아래의 **작업** 옆의 **+ 추가**를 선택합니다. 그런 다음 **작업 추가** 대화 상자에서 **코드 인터프리터**를 선택한 다음 **저장**을 선택합니다(코드 인터프리터용 파일을 업로드할 필요는 없습니다).
+
+    에이전트는 사용자가 에이전트의 지식 소스로 업로드한 문서에 *기반을 두고* 응답합니다(즉, 이 문서의 내용에 따라 질문에 답변합니다). 에이전트는 작업을 수행하는 데 필요한 경우 자체 Python 코드를 생성하고 실행하여 코드 인터프리터 도구를 사용합니다.
 
 ## 에이전트를 테스트합니다.
 
 이제 에이전트를 만들었으므로 Azure AI 파운드리 포털 플레이그라운드에서 테스트할 수 있습니다.
 
 1. 에이전트에 대한 **설정** 창의 맨 위에서 **플레이그라운드에서 사용해 보기**를 선택합니다.
-1. 플레이그라운드에서 `What's the maximum I can claim for meals?`프롬프트를 입력하고 에이전트의 응답을 검토합니다. 이 응답은 에이전트 설정에 지식으로 추가한 경비 정책 문서에 있는 정보를 기반으로 해야 합니다.
-
-    ![Azure AI 파운드리 포털의 에이전트 플레이그라운드 스크린샷.](./Media/ai-agent-playground.png)
+1. 플레이그라운드에서 `What's the maximum I can claim for meals?` 프롬프트를 입력하고 에이전트의 응답을 검토합니다. 이 응답은 에이전트 설정에 지식으로 추가한 경비 정책 문서에 있는 정보를 기반으로 해야 합니다.
 
     > **참고**: 속도 제한을 초과하여 에이전트가 응답하지 못하는 경우. 몇 초 정도 기다렸다가 다시 시도하세요. 구독에서 사용할 수 있는 할당량이 부족한 경우 모델이 응답하지 않을 수 있습니다.
 
-1. `What about accommodation?`(와)과 같은 후속 질문을 시도하고 응답을 검토합니다.
+1. 후속 프롬프트 `I'd like to submit a claim for a meal.` 사용 후 응답을 검토합니다. 에이전트가 사용자에게 청구를 제출하는 데 필요한 정보를 요청해야 합니다.
+1. 에이전트에게 이메일 주소를 제출합니다(예: `fred@contoso.com`). 에이전트는 응답을 확인하고 비용 청구에 필요한 나머지 정보(설명 및 금액)를 요청해야 합니다.
+1. 청구 및 금액을 설명하는 프롬프트를 제출합니다(예: `Breakfast cost me $20`).
+1. 에이전트는 코드 인터프리터를 사용하여 비용 청구 텍스트 파일을 준비하고, 사용자가 파일을 다운로드할 수 있는 링크를 제공해야 합니다.
+
+    ![Azure AI 파운드리 포털의 에이전트 플레이그라운드 스크린샷.](./Media/ai-agent-playground.png)
+
+1. 텍스트 문서를 다운로드하고 열어 비용 청구 세부 정보를 확인합니다.
 
 ## 정리
 
