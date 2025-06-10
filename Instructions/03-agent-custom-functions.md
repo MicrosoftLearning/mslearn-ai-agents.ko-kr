@@ -22,47 +22,30 @@ lab:
 
     ![Azure AI Foundry 포털의 스크린샷.](./Media/ai-foundry-home.png)
 
-1. 홈페이지에서 **+ 프로젝트 만들기**를 선택합니다.
-1. **프로젝트 만들기** 마법사에서 유효한 프로젝트 이름을 입력하고 기존 허브가 추천되면 새 허브를 만드는 옵션을 선택합니다. 그런 다음 허브 및 프로젝트를 지원하기 위해 자동으로 만들어지는 Azure 리소스를 검토합니다.
-1. **사용자 지정**을 선택하고 허브에 대해 다음 설정을 지정합니다.
-    - **허브 이름**: *허브에서 유효한 이름*
+1. 홈페이지에서 **에이전트 만들기**를 선택합니다.
+1. 프로젝트를 만들라는 메시지가 표시되면 프로젝트의 유효한 이름을 입력하고 **고급 옵션**을 펼칩니다.
+1. 프로젝트에 대한 다음 설정을 확인합니다.
+    - **Azure AI 파운드리 리소스**: *Azure AI 파운드리 리소스의 유효한 이름*
     - **구독**: ‘Azure 구독’
     - **리소스 그룹**: ‘리소스 그룹 만들기 또는 선택’
-    - **위치**: 다음 지역 중 하나를 선택합니다.\*
-        - eastus
-        - eastus2
-        - 스웨덴 중부
-        - westus
-        - westus3
-    - **Azure AI 서비스 또는 Azure OpenAI 연결**: *새 AI 서비스 리소스 만들기*
-    - **Azure AI 검색 연결**: 연결 건너뛰기
+    - **지역**: **AI 서비스 지원 위치 *선택***\*
 
-    > \* 작성 시 이러한 지역은 에이전트에서 사용할 gpt-4o 모델을 지원합니다. 모델 가용성은 지역 할당량에 의해 제한됩니다. 연습 후반부에 할당량 한도에 도달하는 경우 다른 지역에서 다른 프로젝트를 만들어야 할 수도 있습니다.
+    > \* 일부 Azure AI 리소스는 지역 모델 할당량에 의해 제한됩니다. 연습 후반부에 할당량 한도를 초과하는 경우 다른 지역에서 다른 리소스를 만들어야 할 수도 있습니다.
 
-1. **다음**을 선택하여 구성을 검토합니다. **만들기**를 선택하고 프로세스가 완료될 때까지 기다립니다.
-1. 프로젝트를 만들 때 표시되는 팁을 모두 닫고 Azure AI 파운드리 포털에서 프로젝트 페이지를 검토합니다. 이 페이지는 다음 이미지와 유사합니다.
+1. **만들기**를 선택한 다음, 프로젝트가 만들어질 때까지 기다립니다.
+1. 프로젝트가 생성되면 에이전트 플레이그라운드가 자동으로 열리므로 모델을 선택하거나 배포할 수 있습니다.
 
-    ![Azure AI 파운드리 포털의 Azure AI 프로젝트 세부 정보 스크린샷.](./Media/ai-foundry-project.png)
+    ![Azure AI 파운드리 프로젝트 에이전트 플레이그라운드의 스크린샷.](./Media/ai-foundry-agents-playground.png)
 
-## 생성형 AI 모델 배포
+    >**참고**: 에이전트 및 프로젝트를 만들 때 GPT-4o 베이스 모델이 자동으로 배포됩니다.
 
-이제 에이전트를 지원하기 위해 생성형 AI 언어 모델을 배포할 준비가 되었습니다.
+1. 왼쪽 탐색 창에서 **개요**를 선택하면 다음과 같은 프로젝트의 메인 페이지가 표시됩니다.
 
-1. 프로젝트 왼쪽 창의 **내 자산** 섹션에서 **모델 + 엔드포인트** 페이지를 선택합니다.
-1. **모델 + 엔드포인트** 페이지의 **모델 배포** 탭의 **+ 모델 배포** 메뉴에서 **기본 모델 배포**를 선택합니다.
-1. 목록에서 **gpt-4o** 모델을 검색하고 선택한 후 확인합니다.
-1. 배포 세부 정보에서 **사용자 지정**을 선택하여 다음 설정으로 모델을 배포합니다.
-    - **배포 이름**: *모델 배포에 대한 유효한 이름*
-    - **배포 유형**: 글로벌 표준
-    - **자동 버전 업데이트**: 사용
-    - **모델 버전**: *사용 가능한 최신 버전 선택*
-    - **연결된 AI 리소스**: *Azure OpenAI 리소스 연결 선택*
-    - **분당 토큰 속도 제한(천 단위)**: 50K *(또는 50K 이하인 경우 구독에서 사용 가능한 최대치)*
-    - **콘텐츠 필터**: DefaultV2
+    > **참고**: *권한 부족** 오류가 표시되면 **수정** 버튼을 사용하여 문제를 해결합니다.
 
-    > **참고**: TPM을 줄이면 사용 중인 구독에서 사용 가능한 할당량을 과도하게 사용하지 않을 수 있습니다. 이 연습에 사용되는 데이터는 50,000TPM이면 충분합니다. 사용 가능한 할당량이 이 수치 이하이면 연습을 완료할 수 있지만 속도 제한을 초과하는 경우 기다린 다음 프롬프트를 다시 제출해야 할 수 있습니다.
+    ![Azure AI 파운드리 프로젝트 개요 페이지의 스크린샷.](./Media/ai-foundry-project.png)
 
-1. 배포가 완료될 때가지 기다립니다.
+1. 클라이언트 응용 프로그램에서 프로젝트에 연결하는 데 사용하므로 **Azure AI 파운드리 프로젝트 엔드포인트** 값을 메모장에 복사합니다.
 
 ## 함수 도구를 사용하는 에이전트 개발
 
@@ -109,7 +92,7 @@ AI 파운드리에서 프로젝트를 만들었으므로 이제 사용자 지정
     ```
    python -m venv labenv
    ./labenv/bin/Activate.ps1
-   pip install python-dotenv azure-identity azure-ai-projects
+   pip install -r requirements.txt azure-ai-projects
     ```
 
     >**참고:** 라이브러리 설치 중에 표시되는 경고 또는 오류 메시지를 무시할 수 있습니다.
@@ -122,8 +105,8 @@ AI 파운드리에서 프로젝트를 만들었으므로 이제 사용자 지정
 
     코드 편집기에서 파일이 열립니다.
 
-1. 코드 파일에서 **your_project_connection_string** 자리 표시자를 프로젝트의 연결 문자열(Azure AI 파운드리 포털의 프로젝트 **개요** 페이지에서 복사함)로 바꾸고, **your_model_deployment** 자리 표시자를 GPT-4 모델 배포에 할당한 이름으로 바꿉니다.
-1. 자리 표시자를 바꾼 후 **Ctrl+S** 명령을 사용하여 변경 내용을 저장한 다음 **Ctrl+Q** 명령을 사용하여 Cloud Shell 명령줄을 열어 두고 코드 편집기를 닫습니다.
+1. 코드 파일에서 **your_project_endpoint** 자리 표시자를 프로젝트의 엔드포인트로 바꿉니다(Azure AI 파운드리 포털의 프로젝트 **개요** 페이지에서 복사).
+1. 자리 표시자를 바꾼 후에는 **CTRL+S** 명령을 사용하여 변경 내용을 저장한 다음 **CTRL+Q** 명령을 사용하여 Cloud Shell 명령줄을 열어둔 상태에서 코드 편집기를 닫습니다.
 
 ### 사용자 지정 함수 정의
 
@@ -175,22 +158,22 @@ AI 파운드리에서 프로젝트를 만들었으므로 이제 사용자 지정
     ```python
    # Add references
    from azure.identity import DefaultAzureCredential
-   from azure.ai.projects import AIProjectClient
-   from azure.ai.projects.models import FunctionTool, ToolSet
+   from azure.ai.agents import AgentsClient
+   from azure.ai.agents.models import FunctionTool, ToolSet, ListSortOrder
    from user_functions import user_functions
     ```
 
-1. **Connect to the Azure AI Foundry project** 주석을 찾아 다음 코드를 추가하여 현재 Azure 자격 증명을 사용하는 Azure AI 프로젝트에 연결합니다.
+1. **Connect to the Agent client** 주석을 찾아 다음 코드를 추가하여 현재 Azure 자격 증명을 사용하여 Azure AI 프로젝트에 연결합니다.
 
     > **팁**: 들여쓰기 수준을 올바르게 유지하도록 주의합니다.
 
     ```python
-   # Connect to the Azure AI Foundry project
-   project_client = AIProjectClient.from_connection_string(
-        credential=DefaultAzureCredential
-            (exclude_environment_credential=True,
-             exclude_managed_identity_credential=True),
-        conn_str=PROJECT_CONNECTION_STRING
+   # Connect to the Agent client
+   agent_client = AgentsClient(
+       endpoint=project_endpoint,
+       credential=DefaultAzureCredential
+           (exclude_environment_credential=True,
+            exclude_managed_identity_credential=True)
    )
     ```
     
@@ -198,14 +181,15 @@ AI 파운드리에서 프로젝트를 만들었으므로 이제 사용자 지정
 
     ```python
    # Define an agent that can use the custom functions
-   with project_client:
+   with agent_client:
 
         functions = FunctionTool(user_functions)
         toolset = ToolSet()
         toolset.add(functions)
+        agent_client.enable_auto_function_calls(toolset)
             
-        agent = project_client.agents.create_agent(
-            model=MODEL_DEPLOYMENT,
+        agent = agent_client.create_agent(
+            model=model_deployment,
             name="support-agent",
             instructions="""You are a technical support agent.
                             When a user has a technical issue, you get their email address and a description of the issue.
@@ -215,7 +199,7 @@ AI 파운드리에서 프로젝트를 만들었으므로 이제 사용자 지정
             toolset=toolset
         )
 
-        thread = project_client.agents.create_thread()
+        thread = agent_client.threads.create()
         print(f"You're chatting with: {agent.name} ({agent.id})")
 
     ```
@@ -224,15 +208,15 @@ AI 파운드리에서 프로젝트를 만들었으므로 이제 사용자 지정
 
     ```python
    # Send a prompt to the agent
-   message = project_client.agents.create_message(
+   message = agent_client.messages.create(
         thread_id=thread.id,
         role="user",
         content=user_prompt
    )
-   run = project_client.agents.create_and_process_run(thread_id=thread.id, agent_id=agent.id)
+   run = agent_client.runs.create_and_process(thread_id=thread.id, agent_id=agent.id)
     ```
 
-    > **참고**: 스레드를 실행할 때 **create_and_process_run** 메서드를 사용하면, 에이전트가 함수의 이름과 매개변수를 기반으로 해당 함수들을 자동으로 찾아 사용할 수 있습니다. 대안으로 **create_run** 메서드를 사용할 수 있는데, 이 경우 함수 호출이 필요한 시점을 결정하기 위해 실행 상태를 폴링하는 코드를 작성하여 함수를 호출하고 그 결과를 에이전트에 반환할 책임이 있습니다.
+    > **참고**: **create_and_process** 메서드를 사용하여 스레드를 실행하면 에이전트가 자동으로 함수를 찾아 이름과 매개 변수에 따라 함수를 사용하도록 선택할 수 있습니다. 대안으로 **create_run** 메서드를 사용할 수 있는데, 이 경우 함수 호출이 필요한 시점을 결정하기 위해 실행 상태를 폴링하는 코드를 작성하여 함수를 호출하고 그 결과를 에이전트에 반환할 책임이 있습니다.
 
 1. **Check the run status for failures** 주석을 찾고 다음 코드를 추가하여 발생하는 오류를 표시합니다.
 
@@ -246,29 +230,32 @@ AI 파운드리에서 프로젝트를 만들었으므로 이제 사용자 지정
 
     ```python
    # Show the latest response from the agent
-   messages = project_client.agents.list_messages(thread_id=thread.id)
-   last_msg = messages.get_last_text_message_by_role("assistant")
+   last_msg = agent_client.messages.get_last_message_text_by_role(
+       thread_id=thread.id,
+       role=MessageRole.AGENT,
+   )
    if last_msg:
         print(f"Last Message: {last_msg.text.value}")
     ```
 
-1. 루프가 종료된 후의 **Get the conversation history** 주석을 찾고 다음 코드를 추가하여 대화 스레드에서 메시지를 출력하되, 순서를 반대로 변경하여 시간순으로 표시합니다.
+1. **Get the conversation history** 주석을 찾아 다음 코드를 추가하여 대화 스레드에서 메시지를 시간 순서대로 출력합니다.
 
     ```python
    # Get the conversation history
    print("\nConversation Log:\n")
-   messages = project_client.agents.list_messages(thread_id=thread.id)
-   for message_data in reversed(messages.data):
-        last_message_content = message_data.content[-1]
-        print(f"{message_data.role}: {last_message_content.text.value}\n")
+   messages = agent_client.messages.list(thread_id=thread.id, order=ListSortOrder.ASCENDING)
+   for message in messages:
+       if message.text_messages:
+           last_msg = message.text_messages[-1]
+           print(f"{message.role}: {last_msg.text.value}\n")
     ```
 
 1. **Clean up** 주석을 찾고 다음 코드를 추가하여 더 이상 필요하지 않은 경우 에이전트 및 스레드를 삭제합니다.
 
     ```python
    # Clean up
-   project_client.agents.delete_agent(agent.id)
-   project_client.agents.delete_thread(thread.id)
+   agent_client.delete_agent(agent.id)
+   print("Deleted agent")
     ```
 
 1. 주석을 사용하여 코드를 검토하고 다음 방법을 이해합니다.
