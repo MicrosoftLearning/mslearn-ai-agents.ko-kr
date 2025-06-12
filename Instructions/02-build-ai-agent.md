@@ -187,7 +187,11 @@ lab:
     )
 
    run = agent_client.runs.create_and_process(thread_id=thread.id, agent_id=agent.id)
-     
+    ```
+
+1. **Check the run status for failures** 주석을 찾고 다음 코드를 추가하여 오류가 있는지 확인합니다.
+
+    ```python
    # Check the run status for failures
    if run.status == "failed":
         print(f"Run failed: {run.last_error}")
