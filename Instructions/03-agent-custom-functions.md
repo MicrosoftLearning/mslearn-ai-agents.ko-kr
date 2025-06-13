@@ -159,7 +159,7 @@ AI 파운드리에서 프로젝트를 만들었으므로 이제 사용자 지정
    # Add references
    from azure.identity import DefaultAzureCredential
    from azure.ai.agents import AgentsClient
-   from azure.ai.agents.models import FunctionTool, ToolSet, ListSortOrder
+   from azure.ai.agents.models import FunctionTool, ToolSet, ListSortOrder, MessageRole
    from user_functions import user_functions
     ```
 
