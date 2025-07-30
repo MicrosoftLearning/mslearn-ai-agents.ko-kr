@@ -10,6 +10,8 @@ lab:
 
 이 연습에서는 4개의 샘플 로그 파일이 제공됩니다. DevOps 도우미 에이전트 코드는 몇 가지 예제 로그 메시지로 샘플 로그 파일만 업데이트합니다.
 
+> **팁**: 이 연습에서 사용되는 코드는 Python용 의미 체계 커널 SDK를 기준으로 합니다. Microsoft .NET 및 Java용 SDK를 사용하여 유사한 솔루션을 개발할 수 있습니다. 자세한 내용은 [지원되는 의미 체계 커널 언어](https://learn.microsoft.com/semantic-kernel/get-started/supported-languages)를 참조하세요.
+
 이 연습을 완료하는 데 약 **30**분 정도 소요됩니다.
 
 > **참고**: 이 연습에 사용된 일부 기술은 미리 보기이거나 현재 개발 중에 있습니다. 예기치 않은 동작, 경고 또는 오류가 발생할 수 있습니다.
@@ -46,8 +48,6 @@ Azure AI 파운드리 프로젝트에 모델을 배포하는 것부터 시작해
 
 1. **설정** 창에서 모델 배포의 이름을 기록합니다(**GPT-4o**이어야 함). **모델 및 엔드포인트** 페이지에서 배포를 확인하면 이를 확인할 수 있습니다(왼쪽 탐색 창에서 해당 페이지를 열면 됩니다).
 1. 왼쪽 탐색 창에서 **개요**를 선택하면 다음과 같은 프로젝트의 메인 페이지가 표시됩니다.
-
-    > **참고**: *권한 부족** 오류가 표시되면 **수정** 버튼을 사용하여 문제를 해결합니다.
 
     ![Azure AI 파운드리 포털의 Azure AI 프로젝트 세부 정보 스크린샷.](./Media/ai-foundry-project.png)
 
@@ -96,10 +96,10 @@ Azure AI 파운드리 프로젝트에 모델을 배포하는 것부터 시작해
     ```
    python -m venv labenv
    ./labenv/bin/Activate.ps1
-   pip install python-dotenv azure-identity semantic-kernel[azure] 
+   pip install python-dotenv azure-identity semantic-kernel --upgrade
     ```
 
-    > **참고**: *semantic-kernel[azure]* 을 설치하면 *azure-ai-projects*의 Semantic Kernel과 호환되는 버전이 자동으로 설치됩니다.
+    > **참고**: *semantic-kernel*을 설치하면 *azure-ai-projects*의 의미 체계 커널 호환 버전이 자동으로 설치됩니다.
 
 1. 제공된 구성 파일을 편집하려면 다음 명령을 입력합니다.
 
