@@ -6,7 +6,9 @@ lab:
 
 # AI 에이전트 배포
 
-이 연습에서는 Azure AI 에이전트 서비스를 사용하여 데이터를 분석하고 차트를 만드는 간단한 에이전트를 만듭니다. 에이전트는 기본 제공 *코드 인터프리터* 도구를 사용하여 차트를 이미지로 만드는 데 필요한 코드를 동적으로 생성한 다음 결과 차트 이미지를 저장합니다.
+이 연습에서는 Azure AI 에이전트 서비스를 사용하여 데이터를 분석하고 차트를 만드는 간단한 에이전트를 만듭니다. 에이전트는 기본 제공 *코드 인터프리터* 도구를 사용하여 데이터를 분석하는 데 필요한 코드를 동적으로 생성할 수 있습니다.
+
+> **팁**: 이 연습에서 사용되는 코드는 Python용 Azure AI 파운드리를 기준으로 합니다. Microsoft .NET, JavaScript 및 Java용 SDK를 사용하여 유사한 솔루션을 개발할 수 있습니다. 자세한 내용은 [Azure AI 파운드리 SDK 클라이언트 라이브러리](https://learn.microsoft.com/azure/ai-foundry/how-to/develop/sdk-overview)를 참조하세요.
 
 이 연습을 완료하는 데 약 **30**분 정도 소요됩니다.
 
@@ -31,15 +33,13 @@ lab:
     > \* 일부 Azure AI 리소스는 지역 모델 할당량에 의해 제한됩니다. 연습 후반부에 할당량 한도를 초과하는 경우 다른 지역에서 다른 리소스를 만들어야 할 수도 있습니다.
 
 1. **만들기**를 선택한 다음, 프로젝트가 만들어질 때까지 기다립니다.
-1. 프로젝트가 생성되면 에이전트 플레이그라운드가 자동으로 열리므로 모델을 선택하거나 배포할 수 있습니다.
+1. 메시지가 표시되면 할당량 가용성에 따라 *전역 표준* 또는 *표준* 배포 옵션을 사용하여 **gpt-4o** 모델을 배포합니다.
 
-    ![Azure AI 파운드리 프로젝트 에이전트 플레이그라운드의 스크린샷.](./Media/ai-foundry-agents-playground.png)
+    >**참고**: 할당량을 사용할 수 있는 경우 에이전트 및 프로젝트를 만들 때 GPT-4o 기본 모델이 자동으로 배포될 수 있습니다.
 
-    >**참고**: 에이전트 및 프로젝트를 만들 때 GPT-4o 베이스 모델이 자동으로 배포됩니다.
+1. 프로젝트를 만들면 에이전트 플레이그라운드가 열립니다.
 
 1. 왼쪽 탐색 창에서 **개요**를 선택하면 다음과 같은 프로젝트의 메인 페이지가 표시됩니다.
-
-    > **참고**: *권한 부족** 오류가 표시되면 **수정** 버튼을 사용하여 문제를 해결합니다.
 
     ![Azure AI 파운드리 프로젝트 개요 페이지의 스크린샷.](./Media/ai-foundry-project.png)
 
@@ -101,7 +101,7 @@ lab:
 
     코드 편집기에서 파일이 열립니다.
 
-1. 코드 파일에서 **your_project_endpoint** 자리 표시자를 프로젝트의 엔드포인트로 바꿉니다(Azure AI 파운드리 포털의 프로젝트 **개요** 페이지에서 복사).
+1. 코드 파일에서 **your_project_endpoint** 자리 표시자를 프로젝트의 엔드포인트(Azure AI 파운드리 포털의 프로젝트 **개요** 페이지에서 복사됨)로 바꾸고 MODEL_DEPLOYMENT_NAME 변수가 모델 배포 이름(*gpt-4o*)으로 설정되어 있는지 확인합니다.
 1. 자리 표시자를 바꾼 후에는 **CTRL+S** 명령을 사용하여 변경 내용을 저장한 다음 **CTRL+Q** 명령을 사용하여 Cloud Shell 명령줄을 열어둔 상태에서 코드 편집기를 닫습니다.
 
 ### 에이전트 앱에 대한 코드 작성
@@ -160,7 +160,7 @@ lab:
    agent = agent_client.create_agent(
         model=model_deployment,
         name="data-agent",
-        instructions="You are an AI agent that analyzes the data in the file that has been uploaded. If the user requests a chart, create it and save it as a .png file.",
+        instructions="You are an AI agent that analyzes the data in the file that has been uploaded. Use Python to calculate statistical metrics as necessary.",
         tools=code_interpreter.definitions,
         tool_resources=code_interpreter.resources,
    )
@@ -221,19 +221,6 @@ lab:
            print(f"{message.role}: {last_msg.text.value}\n")
     ```
 
-1. **Get any generated files** 주석을 찾고 다음 코드를 추가하여 (에이전트가 내부 스토리지에 파일을 저장했음을 나타내는) 메시지에서 파일 경로 주석을 가져온 다음 파일을 앱 폴더에 복사합니다. _참고_: 현재 시스템에서 이미지 콘텐츠를 사용할 수 없습니다.
-
-    ```python
-   # Get any generated files
-   for msg in messages:
-       # Save every image file in the message
-       for img in msg.image_contents:
-           file_id = img.image_file.file_id
-           file_name = f"{file_id}_image_file.png"
-           agent_client.files.save(file_id=file_id, file_name=file_name)
-           print(f"Saved image file to: {Path.cwd() / file_name}")
-    ```
-
 1. **Clean up** 주석을 찾고 다음 코드를 추가하여 더 이상 필요하지 않은 경우 에이전트 및 스레드를 삭제합니다.
 
     ```python
@@ -244,12 +231,11 @@ lab:
 1. 주석을 사용하여 코드를 검토하고 다음 방법을 이해합니다.
     - AI 파운드리 프로젝트에 연결합니다.
     - 데이터 파일을 업로드하고 액세스할 수 있는 코드 인터프리터 도구를 만듭니다.
-    - 코드 인터프리터 도구를 사용하고 데이터를 분석하고 차트를 .png 파일로 만드는 명시적 지침이 있는 새 에이전트를 만듭니다.
+    - 코드 인터프리터 도구를 사용하고 통계 분석에 필요한 경우 Python을 사용하기 위한 명시적 지침을 포함하는 새 에이전트를 만듭니다.
     - 분석할 데이터와 함께 사용자의 프롬프트 메시지를 사용하여 스레드를 실행합니다.
     - 오류가 발생할 경우 실행 상태를 확인합니다.
     - 완료된 스레드에서 메시지를 검색하고 에이전트가 보낸 마지막 메시지를 표시합니다.
     - 대화 내용을 표시합니다.
-    - 생성된 각 파일을 저장합니다.
     - 더 이상 필요하지 않은 경우 에이전트와 스레드를 삭제합니다.
 
 1. 완료되면 코드 파일(*Ctrl+S*)을 저장합니다. 또한 코드 편집기(*Ctrl+Q*)를 닫을 수도 있습니다. 하지만 추가한 코드를 편집해야 하는 경우를 대비해 계속 열어 두는 것이 좋습니다. 두 경우 모두 Cloud Shell 명령줄 창을 열어 둡니다.
@@ -283,28 +269,26 @@ lab:
 
     > **팁**: 속도 제한을 초과하여 앱이 실패하는 경우. 몇 초 정도 기다렸다가 다시 시도하세요. 구독에서 사용할 수 있는 할당량이 부족한 경우 모델이 응답하지 않을 수 있습니다.
 
-1. 응답을 봅니다. 그런 다음, 이번에는 차트를 요청하는 다른 프롬프트를 입력합니다.
+1. 응답을 봅니다. 그런 다음, 이번에는 시각화를 요청하는 다른 프롬프트를 입력합니다.
 
     ```
-   Create a pie chart showing cost by category
+   Create a text-based bar chart showing cost by category
     ```
 
-    이 경우 에이전트는 필요에 따라 코드 인터프리터 도구를 선택적으로 사용하여 요청에 따라 차트를 만들어야 합니다.
+1. 응답을 봅니다. 그런 다음, 이번에는 통계 메트릭을 요청하는 다른 프롬프트를 입력합니다.
+
+    ```
+   What's the standard deviation of cost?
+    ```
+
+    응답을 봅니다.
 
 1. 원하는 경우 대화를 계속할 수 있습니다. 스레드는 *상태 저장*이므로 대화 내용을 유지합니다. 즉, 에이전트에 각 응답에 대한 전체 컨텍스트가 있습니다. 완료되면 `quit`을(를) 입력합니다.
-1. 스레드에서 검색된 대화 메시지와 생성된 파일을 검토합니다.
-
-1. 애플리케이션이 완료되면 cloud shell **다운로드** 명령을 사용하여 앱 폴더에 저장된 각 .png 파일을 다운로드합니다. 예시:
-
-    ```
-   download ./<file_name>.png
-    ```
-
-    다운로드 명령은 브라우저의 오른쪽 아래에 팝업 링크를 만듭니다. 이 링크를 선택하여 파일을 다운로드하고 열 수 있습니다.
+1. 스레드에서 검색된 대화 메시지를 검토합니다. 여기에는 코드 인터프리터 도구를 사용할 때 해당 단계를 설명하기 위해 에이전트가 생성한 메시지가 포함될 수 있습니다.
 
 ## 요약
 
-이 연습에서는 Azure AI 에이전트 서비스 SDK를 사용하여 AI 에이전트를 사용하는 클라이언트 애플리케이션을 만들었습니다. 에이전트는 기본 제공 코드 인터프리터 도구를 사용하여 이미지를 만드는 동적 코드를 실행합니다.
+이 연습에서는 Azure AI 에이전트 서비스 SDK를 사용하여 AI 에이전트를 사용하는 클라이언트 애플리케이션을 만들었습니다. 에이전트는 기본 제공 코드 인터프리터 도구를 통해 동적 Python 코드를 실행하여 통계 분석을 수행할 수 있습니다.
 
 ## 정리
 
