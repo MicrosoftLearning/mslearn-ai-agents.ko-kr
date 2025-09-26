@@ -6,9 +6,13 @@ lab:
 
 # 다중 에이전트 솔루션 개발
 
-이 연습에서는 의미 체계 커널 SDK를 사용하여 두 개의 AI 에이전트를 오케스트레이션하는 프로젝트를 만듭니다. *인시던트 관리자* 에이전트는 문제에 대한 서비스 로그 파일을 분석합니다. 문제가 발견되면 인시던트 관리자가 해결 작업을 권장하고 *DevOps 도우미* 에이전트는 권장 사항을 수신하고 수정 기능을 호출하고 해결 작업을 수행합니다. 그러면 인시던트 관리자 에이전트가 업데이트된 로그를 검토하여 해결에 성공했는지 확인합니다.
+이번 연습에서는 의미 체계 커널 SDK에서 순차 오케스트레이션 패턴을 사용하는 방법을 연습합니다. 고객 피드백을 처리하고 다음 단계를 제안하기 위해 협력하는 세 개의 에이전트로 구성된 간단한 파이프라인을 만듭니다. 만들어 볼 에이전트는 다음과 같습니다.
 
-이 연습에서는 4개의 샘플 로그 파일이 제공됩니다. DevOps 도우미 에이전트 코드는 몇 가지 예제 로그 메시지로 샘플 로그 파일만 업데이트합니다.
+- 요약 작성기 에이전트는 가공되지 않은 피드백을 짧고 중립적인 문장으로 압축합니다.
+- 분류자 에이전트는 피드백을 긍정, 부정 또는 기능 요청으로 분류합니다.
+- 마지막으로 권장 작업 에이전트는 적절한 후속작업 단계를 권장합니다.
+
+의미 체계 커널 SDK를 사용하여 문제를 분석하고, 올바른 에이전트를 통해 라우팅하고, 실행 가능한 결과를 생성하는 방법을 알아봅니다. 그럼 시작하겠습니다.
 
 > **팁**: 이 연습에서 사용되는 코드는 Python용 의미 체계 커널 SDK를 기준으로 합니다. Microsoft .NET 및 Java용 SDK를 사용하여 유사한 솔루션을 개발할 수 있습니다. 자세한 내용은 [지원되는 의미 체계 커널 언어](https://learn.microsoft.com/semantic-kernel/get-started/supported-languages)를 참조하세요.
 
@@ -31,20 +35,15 @@ Azure AI 파운드리 프로젝트에 모델을 배포하는 것부터 시작해
     - **Azure AI 파운드리 리소스**: *Azure AI 파운드리 리소스의 유효한 이름*
     - **구독**: ‘Azure 구독’
     - **리소스 그룹**: ‘리소스 그룹 만들기 또는 선택’
-    - **지역**: **AI 서비스 지원 위치 *선택***\*
+    - **지역**: ***AI Foundry 권장 사항 선택***\*
 
     > \* 일부 Azure AI 리소스는 지역 모델 할당량에 의해 제한됩니다. 연습 후반부에 할당량 한도를 초과하는 경우 다른 지역에서 다른 리소스를 만들어야 할 수도 있습니다.
 
 1. **만들기**를 선택하고 선택한 GPT-4 모델 배포를 포함한 프로젝트가 생성될 때까지 기다립니다.
+
 1. 프로젝트를 만들면 채팅 플레이그라운드가 자동으로 열립니다.
 
-    > **참고**: 이 연습에서는 이 모델의 기본 TPM 설정이 너무 낮을 수 있습니다. TPM이 낮을수록 사용 중인 구독에서 사용 가능한 할당량을 과도하게 사용하지 않는 데 도움이 됩니다. 
-
 1. 왼쪽 탐색 창에서 **모델 및 엔드포인트**를 선택하고 **GPT-4o** 배포를 선택합니다.
-
-1. **편집**을 선택한 다음 **분당 토큰 속도 제한**을 높입니다.
-
-   > **참고**: 이 연습에 사용된 데이터는 40,000TPM이면 충분합니다. 사용 가능한 할당량이 이 수치 이하이면 연습을 완료할 수 있지만 속도 제한을 초과하는 경우 기다린 다음 프롬프트를 다시 제출해야 할 수 있습니다.
 
 1. **설정** 창에서 모델 배포의 이름을 기록합니다(**GPT-4o**이어야 함). **모델 및 엔드포인트** 페이지에서 배포를 확인하면 이를 확인할 수 있습니다(왼쪽 탐색 창에서 해당 페이지를 열면 됩니다).
 1. 왼쪽 탐색 창에서 **개요**를 선택하면 다음과 같은 프로젝트의 메인 페이지가 표시됩니다.
@@ -109,7 +108,7 @@ Azure AI 파운드리 프로젝트에 모델을 배포하는 것부터 시작해
 
     코드 편집기에서 파일이 열립니다.
 
-1. 코드 파일에서 **your_project_endpoint** 자리 표시자를 프로젝트의 엔드포인트(Azure AI 파운드리 포털의 프로젝트 **개요** 페이지에서 복사)로 바꾸고 **your_model_deployment** 자리 표시자를 GPT-4o 모델 배포에 할당한 이름으로 바꿉니다.
+1. 코드 파일에서 **your_openai_endpoint** 자리 표시자를 프로젝트의 Azure Open AI 엔드포인트로 바꿉니다(**Azure OpenAI** 아래, Azure AI Foundry 포털에 위치한 프로젝트 **개요** 페이지에서 복사함). **your_openai_api_key**를 프로젝트의 API 키로 바꾸고 MODEL_DEPLOYMENT_NAME 변수가 모델 배포 이름(*gpt-4o*여야 함)으로 설정되어 있는지 확인합니다.
 
 1. 자리 표시자를 바꾼 후 **Ctrl+S** 명령을 사용하여 변경 내용을 저장한 다음 **Ctrl+Q** 명령을 사용하여 Cloud Shell 명령줄을 열어 두고 코드 편집기를 닫습니다.
 
@@ -117,157 +116,141 @@ Azure AI 파운드리 프로젝트에 모델을 배포하는 것부터 시작해
 
 이제 다중 에이전트 솔루션을 위한 에이전트를 만들 준비가 되었습니다. 그럼 시작하겠습니다.
 
-1. 다음 명령을 입력하여 **agent_chat.py** 파일을 편집합니다.
+1. 다음 명령을 입력하여 **agents.py** 파일을 편집합니다.
 
     ```
-   code agent_chat.py
+   code agents.py
     ```
 
-1. 파일의 코드를 검토하여 다음을 포함하고 있는지 확인합니다.
-    - 두 에이전트의 이름과 지침을 정의하는 상수.
-    - 다중 에이전트 솔루션을 구현하는 대부분의 코드가 추가될 **기본** 함수.
-    - 대화에서 각 턴마다 어떤 에이전트를 선택할지 결정하는 로직을 구현하는 데 사용할 **SelectionStrategy** 클래스.
-    - 대화를 언제 종료할지를 결정하는 로직을 구현하는 데 사용할 **ApprovalTerminationStrategy** 클래스.
-    - DevOps 작업을 수행하는 함수를 포함하는 **DevopsPlugin** 클래스.
-    - 로그 파일을 읽고 쓰는 함수가 포함된 **LogFilePlugin** 클래스.
-
-    먼저 *인시던트 관리자* 에이전트를 만듭니다. 이 에이전트는 서비스 로그 파일을 분석하고, 잠재적인 문제를 식별하고, 해결 작업을 권장하거나 필요한 경우 문제를 에스컬레이션합니다.
-
-1. **INCIDENT_MANAGER_INSTRUCTIONS** 문자열을 확인합니다. 이는 에이전트에 대한 지침입니다.
-
-1. **기본** 함수에서 **Create the incident manager agent on the Azure AI agent service**라는 주석을 찾고 다음 코드를 추가하여 Azure AI 에이전트를 만듭니다.
+1. 파일 상단의 **참조 추가하기** 주석 아래에 다음 코드를 추가하여 에이전트를 구현하는 데 필요한 라이브러리의 네임스페이스를 참조합니다.
 
     ```python
-   # Create the incident manager agent on the Azure AI agent service
-   incident_agent_definition = await client.agents.create_agent(
-        model=ai_agent_settings.model_deployment_name,
-        name=INCIDENT_MANAGER,
-        instructions=INCIDENT_MANAGER_INSTRUCTIONS
+   # Add references
+   import asyncio
+   from semantic_kernel.agents import Agent, ChatCompletionAgent, SequentialOrchestration
+   from semantic_kernel.agents.runtime import InProcessRuntime
+   from semantic_kernel.connectors.ai.open_ai import AzureChatCompletion
+   from semantic_kernel.contents import ChatMessageContent
+    ```
+
+
+1. **get_agents** 함수에서 **요약 작성기 에이전트 만들기** 주석 아래에 다음 코드를 추가합니다.
+
+    ```python
+   # Create a summarizer agent
+   summarizer_agent = ChatCompletionAgent(
+       name="SummarizerAgent",
+       instructions="""
+       Summarize the customer's feedback in one short sentence. Keep it neutral and concise.
+       Example output:
+       App crashes during photo upload.
+       User praises dark mode feature.
+       """,
+       service=AzureChatCompletion(),
    )
     ```
 
-    이 코드는 Azure AI Project 클라이언트에 에이전트 정의를 만듭니다.
-
-1. **Create a Semantic Kernel agent for the Azure AI incident manager agent**라는 주석을 찾고, Azure AI 에이전트 정의를 기반으로 의미 체계 커널 에이전트를 만드는 다음 코드를 추가합니다.
+1. **분류자 에이전트 만들기** 주석 아래에 다음 코드를 추가합니다.
 
     ```python
-   # Create a Semantic Kernel agent for the Azure AI incident manager agent
-   agent_incident = AzureAIAgent(
-        client=client,
-        definition=incident_agent_definition,
-        plugins=[LogFilePlugin()]
+   # Create a classifier agent
+   classifier_agent = ChatCompletionAgent(
+       name="ClassifierAgent",
+       instructions="""
+       Classify the feedback as one of the following: Positive, Negative, or Feature request.
+       """,
+       service=AzureChatCompletion(),
    )
     ```
 
-    이 코드는 **LogFilePlugin**에 대한 액세스 권한이 있는 의미 체계 커널 에이전트를 만듭니다. 이 플러그인을 사용하면 에이전트가 로그 파일 내용을 읽을 수 있습니다.
+1. **권장 작업 에이전트 만들기** 주석 아래에 다음 코드를 추가합니다.
 
-    이제 두 번째 에이전트를 만들어 보겠습니다. 이 에이전트는 문제에 응답하고 이를 해결하기 위해 DevOps 작업을 수행합니다.
+    ```python
+   # Create a recommended action agent
+   action_agent = ChatCompletionAgent(
+       name="ActionAgent",
+       instructions="""
+       Based on the summary and classification, suggest the next action in one short sentence.
+       Example output:
+       Escalate as a high-priority bug for the mobile team.
+       Log as positive feedback to share with design and marketing.
+       Log as enhancement request for product backlog.
+       """,
+       service=AzureChatCompletion(),
+   )
+    ```
 
-1. 코드 파일 맨 위에서 **DEVOPS_ASSISTANT_INSTRUCTIONS** 문자열을 잠시 확인합니다. 다음은 새 DevOps 도우미 에이전트에 제공할 지침입니다.
+1. **에이전트 목록 반환하기** 주석 아래에 다음 코드를 추가합니다.
 
-1. **Create the devops agent on the Azure AI agent service**라는 주석을 찾아, Azure AI 에이전트 정의를 만드는 다음 코드를 추가합니다.
+    ```python
+   # Return a list of agents
+   return [summarizer_agent, classifier_agent, action_agent]
+    ```
+
+    이 목록의 에이전트 순서는 오케스트레이션 중에 선택한 순서입니다.
+
+## 순차 오케스트레이션 만들기
+
+1. **main** 함수에서 **입력 태스크 초기화하기** 주석을 찾아 다음 코드를 추가합니다.
     
     ```python
-   # Create the devops agent on the Azure AI agent service
-   devops_agent_definition = await client.agents.create_agent(
-        model=ai_agent_settings.model_deployment_name,
-        name=DEVOPS_ASSISTANT,
-        instructions=DEVOPS_ASSISTANT_INSTRUCTIONS,
+   # Initialize the input task
+   task="""
+   I tried updating my profile picture several times today, but the app kept freezing halfway through the process. 
+   I had to restart it three times, and in the end, the picture still wouldn't upload. 
+   It's really frustrating and makes the app feel unreliable.
+   """
+    ```
+
+1. **순차 오케스트레이션 만들기** 주석 아래에 다음 코드를 추가하여 응답 콜백으로 순차 오케스트레이션을 정의합니다.
+
+    ```python
+   # Create a sequential orchestration
+   sequential_orchestration = SequentialOrchestration(
+       members=get_agents(),
+       agent_response_callback=agent_response_callback,
    )
     ```
 
-1. **Create a Semantic Kernel agent for the devops Azure AI agent**라는 주석을 찾아, Azure AI 에이전트 정의를 기반으로 의미 체계 커널 에이전트를 생성하는 다음 코드를 추가합니다.
-    
+    `agent_response_callback`(을)를 통해 오케스트레이션 중에 각 에이전트의 응답을 볼 수 있습니다.
+
+1. **런타임 만들고 시작하기** 주석 아래에 다음 코드를 추가합니다.
+
     ```python
-   # Create a Semantic Kernel agent for the devops Azure AI agent
-   agent_devops = AzureAIAgent(
-        client=client,
-        definition=devops_agent_definition,
-        plugins=[DevopsPlugin()]
+   # Create a runtime and start it
+   runtime = InProcessRuntime()
+   runtime.start()
+    ```
+
+1. **작업 및 런타임을 사용하여 오케스트레이션 호출하기** 주석 아래에 다음 코드를 추가합니다.
+
+    ```python
+   # Invoke the orchestration with a task and the runtime
+   orchestration_result = await sequential_orchestration.invoke(
+       task=task,
+       runtime=runtime,
    )
     ```
 
-    **DevopsPlugin**을 사용하면 에이전트가 서비스 다시 시작 또는 트랜잭션 롤백과 같은 DevOps 작업을 시뮬레이션할 수 있습니다.
-
-### 그룹 채팅 전략 정의
-
-이제 대화에서 다음 턴을 수행할 에이전트를 결정하고 대화를 종료해야 하는 시점을 결정하는 데 사용되는 로직을 제공해야 합니다.
-
-다음 턴을 수행해야 하는 에이전트를 식별하는 **SelectionStrategy**부터 시작해 보겠습니다.
-
-1. **SelectionStrategy** 클래스(**main** 함수 아래)에서 **Select the next agent that should take the next turn in the chat**라는 주석을 찾아, 선택 함수를 정의하는 다음 코드를 추가합니다.
+1. **결과 기다리기** 주석아래에 다음 코드를 추가합니다.
 
     ```python
-   # Select the next agent that should take the next turn in the chat
-   async def select_agent(self, agents, history):
-        """"Check which agent should take the next turn in the chat."""
-
-        # The Incident Manager should go after the User or the Devops Assistant
-        if (history[-1].name == DEVOPS_ASSISTANT or history[-1].role == AuthorRole.USER):
-            agent_name = INCIDENT_MANAGER
-            return next((agent for agent in agents if agent.name == agent_name), None)
-        
-        # Otherwise it is the Devops Assistant's turn
-        return next((agent for agent in agents if agent.name == DEVOPS_ASSISTANT), None)
+   # Wait for the results
+   value = await orchestration_result.get(timeout=20)
+   print(f"\n****** Task Input ******{task}")
+   print(f"***** Final Result *****\n{value}")
     ```
 
-    이 코드는 매 턴마다 실행되어 어떤 에이전트가 응답할지를 결정하며 채팅 기록을 확인하여 마지막으로 응답한 에이전트를 판단합니다.
+    이 코드에서는 오케스트레이션의 결과를 검색하고 표시합니다. 지정된 시간 제한 내에 오케스트레이션이 완료되지 않으면 시간 제한 예외가 throw됩니다.
 
-    이제 목표가 완료되어 대화가 종료될 때 신호를 보낼 수 있도록 **ApprovalTerminationStrategy** 클래스를 구현해 보겠습니다.
-
-1. **ApprovalTerminationStrategy** 클래스에서 **End the chat if the agent has indicated there is no action needed**라는 주석을 찾고 다음 코드를 추가하여 종료 함수를 정의합니다.
+1. **유휴 상태일 때 런타임 중지하기** 주석을 찾아 다음 코드를 추가합니다.
 
     ```python
-   # End the chat if the agent has indicated there is no action needed
-   async def should_agent_terminate(self, agent, history):
-        """Check if the agent should terminate."""
-        return "no action needed" in history[-1].content.lower()
+   # Stop the runtime when idle
+   await runtime.stop_when_idle()
     ```
 
-    커널은 에이전트의 응답 후에 이 함수를 호출하여 완료 조건이 충족되는지 확인합니다. 이 경우 인시던트 관리자가 "No action needed"라고 응답하면 목표가 충족된 것입니다. 이 문구는 인시던트 관리자 에이전트 지침에 정의되어 있습니다.
-
-### 그룹 채팅 구현
-
-이제 두 개의 에이전트와 이들이 번갈아 가며 채팅을 종료하도록 돕는 전략이 있으므로 그룹 채팅을 구현할 수 있습니다.
-
-1. 기본 함수 위쪽으로 돌아가, **Add the agents to a group chat with a custom termination and selection strategy**라는 주석을 찾고 그룹 채팅을 생성하는 다음 코드를 추가합니다.
-
-    ```python
-   # Add the agents to a group chat with a custom termination and selection strategy
-   chat = AgentGroupChat(
-        agents=[agent_incident, agent_devops],
-        termination_strategy=ApprovalTerminationStrategy(
-            agents=[agent_incident], 
-            maximum_iterations=10, 
-            automatic_reset=True
-        ),
-        selection_strategy=SelectionStrategy(agents=[agent_incident,agent_devops]),      
-   )
-    ```
-
-    이 코드에서는, 인시던트 관리자 및 DevOps 에이전트를 사용하여 에이전트 그룹 채팅 개체를 만듭니다. 또한 채팅에 대한 종료 및 선택 전략을 정의합니다. **ApprovalTerminationStrategy**는 DevOps 에이전트가 아닌 인시던트 관리자 에이전트에만 연결되어 있다는 점에 주의합니다. 이로써 인시던트 관리자 에이전트가 채팅 종료를 알리는 역할을 담당하게 됩니다. **SelectionStrategy**에는 채팅에서 턴을 맡아야 하는 모든 에이전트가 포함됩니다.
-
-    자동 재설정 플래그는 채팅이 종료될 때 자동으로 채팅을 지웁니다. 이렇게 하면 채팅 기록 개체에 너무 많은 불필요한 토큰을 사용하지 않고도 에이전트가 파일을 계속 분석할 수 있습니다. 
-
-1. **Append the current log file to the chat**라는 주석을 찾고 가장 최근에 읽은 로그 파일 텍스트를 채팅에 추가하는 다음 코드를 입력합니다.
-
-    ```python
-   # Append the current log file to the chat
-   await chat.add_chat_message(logfile_msg)
-   print()
-    ```
-
-1. **Invoke a response from the agents**라는 주석 을 찾아, 그룹 채팅을 호출하는 다음 코드를 추가합니다.
-
-    ```python
-   # Invoke a response from the agents
-   async for response in chat.invoke():
-        if response is None or not response.name:
-            continue
-        print(f"{response.content}")
-    ```
-
-    채팅을 트리거하는 코드입니다. 로그 파일 텍스트가 메시지로 추가되었으므로 선택 전략은 어떤 에이전트가 이를 읽고 응답해야 하는지 결정하고, 그 이후 종료 전략의 조건이 충족되거나 최대 반복 횟수에 도달할 때까지 에이전트 간에 대화가 계속됩니다.
+    처리가 완료되면 런타임을 중지하여 리소스를 정리합니다.
 
 1. **CTRL+S** 명령을 사용하여 변경 내용을 코드 파일에 저장합니다. 파일을 열어 두거나(오류를 수정하기 위해 코드를 편집해야 하는 경우) **Ctrl+Q** 명령을 사용하여 Cloud Shell 명령줄을 열어 둔 채 코드 편집기를 닫습니다.
 
@@ -290,41 +273,40 @@ Azure AI 파운드리 프로젝트에 모델을 배포하는 것부터 시작해
 1. 로그인한 후 다음 명령을 입력하여 애플리케이션을 실행합니다.
 
     ```
-   python agent_chat.py
+   python agents.py
     ```
 
     다음과 비슷한 결과가 나타나야 합니다.
 
     ```output
-    
-    INCIDENT_MANAGER > /home/.../logs/log1.log | Restart service ServiceX
-    DEVOPS_ASSISTANT > Service ServiceX restarted successfully.
-    INCIDENT_MANAGER > No action needed.
+    # SummarizerAgent
+    App freezes during profile picture upload, preventing completion.
+    # ClassifierAgent
+    Negative
+    # ActionAgent
+    Escalate as a high-priority bug for the development team.
 
-    INCIDENT_MANAGER > /home/.../logs/log2.log | Rollback transaction for transaction ID 987654.
-    DEVOPS_ASSISTANT > Transaction rolled back successfully.
-    INCIDENT_MANAGER > No action needed.
+    ****** Task Input ******
+    I tried updating my profile picture several times today, but the app kept freezing halfway through the process.
+    I had to restart it three times, and in the end, the picture still wouldn't upload.
+    It's really frustrating and makes the app feel unreliable.
 
-    INCIDENT_MANAGER > /home/.../logs/log3.log | Increase quota.
-    DEVOPS_ASSISTANT > Successfully increased quota.
-    (continued)
+    ***** Final Result *****
+    Escalate as a high-priority bug for the development team.
     ```
 
-    > **참고**: 앱에는 TPM 속도 제한이 초과될 위험을 줄이기 위해 각 로그 파일을 처리하는 동안 대기하는 코드 및 제한이 초과되는 경우를 대비한 예외 처리가 포함되어 있습니다. 구독에서 사용할 수 있는 할당량이 부족한 경우 모델이 응답하지 않을 수 있습니다.
+1. 필요에 따라 다음과 같은 다른 작업 입력을 사용하여 코드를 실행해 볼 수 있습니다.
 
-1. **logs** 폴더의 로그 파일이 DevopsAssistant의 해결 작업 메시지로 업데이트되었는지 확인합니다.
-
-    예를 들어 log1.log에는 다음 로그 메시지가 추가되어야 합니다.
-
-    ```log
-    [2025-02-27 12:43:38] ALERT  DevopsAssistant: Multiple failures detected in ServiceX. Restarting service.
-    [2025-02-27 12:43:38] INFO  ServiceX: Restart initiated.
-    [2025-02-27 12:43:38] INFO  ServiceX: Service restarted successfully.
+    ```output
+    I use the dashboard every day to monitor metrics, and it works well overall. But when I'm working late at night, the bright screen is really harsh on my eyes. If you added a dark mode option, it would make the experience much more comfortable.
+    ```
+    ```output
+    I reached out to your customer support yesterday because I couldn't access my account. The representative responded almost immediately, was polite and professional, and fixed the issue within minutes. Honestly, it was one of the best support experiences I've ever had.
     ```
 
 ## 요약
 
-이 연습에서는 Azure AI 에이전트 서비스 및 의미 체계 커널 SDK를 사용하여 문제를 자동으로 감지하고 해결 방법을 적용할 수 있는 AI 인시던트 및 DevOps 에이전트를 만들었습니다. 잘했습니다!
+이번 연습에서는 의미 체계 커널 SDK를 사용해 순차 오케스트레이션을 연습하여 여러 에이전트를 간소화된 단일 워크플로로 결합해 보았습니다. 잘했습니다!
 
 ## 정리
 
