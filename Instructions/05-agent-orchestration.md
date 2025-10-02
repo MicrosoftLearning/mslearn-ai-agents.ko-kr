@@ -1,20 +1,18 @@
 ---
 lab:
-  title: 의미 체계 커널을 사용하여 다중 에이전트 솔루션 개발
-  description: 의미 체계 커널 SDK를 사용하여 여러 에이전트가 공동 작업하도록 구성하는 방법을 알아봅니다.
+  title: Microsoft 에이전트 프레임워크로 다중 에이전트 솔루션 개발하기
+  description: Microsoft 에이전트 프레임워크 SDK를 사용하여 여러 에이전트가 공동 작업하도록 구성하는 방법 알아보기
 ---
 
 # 다중 에이전트 솔루션 개발
 
-이번 연습에서는 의미 체계 커널 SDK에서 순차 오케스트레이션 패턴을 사용하는 방법을 연습합니다. 고객 피드백을 처리하고 다음 단계를 제안하기 위해 협력하는 세 개의 에이전트로 구성된 간단한 파이프라인을 만듭니다. 만들어 볼 에이전트는 다음과 같습니다.
+이 연습에서는 Microsoft 에이전트 프레임워크 SDK에서 순차 오케스트레이션 패턴을 사용하는 방법을 연습합니다. 고객 피드백을 처리하고 다음 단계를 제안하기 위해 협력하는 세 개의 에이전트로 구성된 간단한 파이프라인을 만듭니다. 만들어 볼 에이전트는 다음과 같습니다.
 
 - 요약 작성기 에이전트는 가공되지 않은 피드백을 짧고 중립적인 문장으로 압축합니다.
 - 분류자 에이전트는 피드백을 긍정, 부정 또는 기능 요청으로 분류합니다.
 - 마지막으로 권장 작업 에이전트는 적절한 후속작업 단계를 권장합니다.
 
-의미 체계 커널 SDK를 사용하여 문제를 분석하고, 올바른 에이전트를 통해 라우팅하고, 실행 가능한 결과를 생성하는 방법을 알아봅니다. 그럼 시작하겠습니다.
-
-> **팁**: 이 연습에서 사용되는 코드는 Python용 의미 체계 커널 SDK를 기준으로 합니다. Microsoft .NET 및 Java용 SDK를 사용하여 유사한 솔루션을 개발할 수 있습니다. 자세한 내용은 [지원되는 의미 체계 커널 언어](https://learn.microsoft.com/semantic-kernel/get-started/supported-languages)를 참조하세요.
+Microsoft 에이전트 프레임워크 SDK를 사용하여 문제를 분석하고, 올바른 에이전트를 통해 경로 지정하고, 실행 가능한 결과를 생성하는 방법을 알아봅니다. 그럼 시작하겠습니다.
 
 이 연습을 완료하는 데 약 **30**분 정도 소요됩니다.
 
@@ -95,10 +93,8 @@ Azure AI 파운드리 프로젝트에 모델을 배포하는 것부터 시작해
     ```
    python -m venv labenv
    ./labenv/bin/Activate.ps1
-   pip install python-dotenv azure-identity semantic-kernel --upgrade
+   pip install azure-identity agent-framework
     ```
-
-    > **참고**: *semantic-kernel*을 설치하면 *azure-ai-projects*의 의미 체계 커널 호환 버전이 자동으로 설치됩니다.
 
 1. 제공된 구성 파일을 편집하려면 다음 명령을 입력합니다.
 
@@ -108,7 +104,7 @@ Azure AI 파운드리 프로젝트에 모델을 배포하는 것부터 시작해
 
     코드 편집기에서 파일이 열립니다.
 
-1. 코드 파일에서 **your_openai_endpoint** 자리 표시자를 프로젝트의 Azure Open AI 엔드포인트로 바꿉니다(**Azure OpenAI** 아래, Azure AI Foundry 포털에 위치한 프로젝트 **개요** 페이지에서 복사함). **your_openai_api_key**를 프로젝트의 API 키로 바꾸고 MODEL_DEPLOYMENT_NAME 변수가 모델 배포 이름(*gpt-4o*여야 함)으로 설정되어 있는지 확인합니다.
+1. 코드 파일에서 **your_openai_endpoint** 자리 표시자를 프로젝트의 엔드포인트로 바꿉니다(Azure AI Foundry 포털의 프로젝트 **개요** 페이지에서 복사). **your_model_deployment** 자리 표시자를 GPT-4o 모델 배포에 할당한 이름으로 바꿉니다.
 
 1. 자리 표시자를 바꾼 후 **Ctrl+S** 명령을 사용하여 변경 내용을 저장한 다음 **Ctrl+Q** 명령을 사용하여 Cloud Shell 명령줄을 열어 두고 코드 편집기를 닫습니다.
 
@@ -127,130 +123,86 @@ Azure AI 파운드리 프로젝트에 모델을 배포하는 것부터 시작해
     ```python
    # Add references
    import asyncio
-   from semantic_kernel.agents import Agent, ChatCompletionAgent, SequentialOrchestration
-   from semantic_kernel.agents.runtime import InProcessRuntime
-   from semantic_kernel.connectors.ai.open_ai import AzureChatCompletion
-   from semantic_kernel.contents import ChatMessageContent
+   from typing import cast
+   from agent_framework import ChatMessage, Role, SequentialBuilder, WorkflowOutputEvent
+   from agent_framework.azure import AzureOpenAIChatClient
+   from azure.identity import AzureCliCredential
     ```
 
+1. **main** 함수에서 잠시 에이전트 지침을 검토합니다. 이러한 지침은 오케스트레이션에서 각 에이전트의 동작을 정의합니다.
 
-1. **get_agents** 함수에서 **요약 작성기 에이전트 만들기** 주석 아래에 다음 코드를 추가합니다.
+1. **채팅 클라이언트 만들기** 주석 아래에 다음 코드를 추가합니다.
 
     ```python
-   # Create a summarizer agent
-   summarizer_agent = ChatCompletionAgent(
-       name="SummarizerAgent",
-       instructions="""
-       Summarize the customer's feedback in one short sentence. Keep it neutral and concise.
-       Example output:
-       App crashes during photo upload.
-       User praises dark mode feature.
-       """,
-       service=AzureChatCompletion(),
+   # Create the chat client
+   chat_client = AzureOpenAIChatClient(credential=AzureCliCredential())
+    ```
+
+1. **에이전트 만들기** 주석 아래에 다음 코드를 추가합니다.
+
+    ```python
+   # Create agents
+   summarizer = chat_client.create_agent(
+       instructions=summarizer_instructions,
+       name="summarizer",
+   )
+
+   classifier = chat_client.create_agent(
+       instructions=classifier_instructions,
+       name="classifier",
+   )
+
+   action = chat_client.create_agent(
+       instructions=action_instructions,
+       name="action",
    )
     ```
-
-1. **분류자 에이전트 만들기** 주석 아래에 다음 코드를 추가합니다.
-
-    ```python
-   # Create a classifier agent
-   classifier_agent = ChatCompletionAgent(
-       name="ClassifierAgent",
-       instructions="""
-       Classify the feedback as one of the following: Positive, Negative, or Feature request.
-       """,
-       service=AzureChatCompletion(),
-   )
-    ```
-
-1. **권장 작업 에이전트 만들기** 주석 아래에 다음 코드를 추가합니다.
-
-    ```python
-   # Create a recommended action agent
-   action_agent = ChatCompletionAgent(
-       name="ActionAgent",
-       instructions="""
-       Based on the summary and classification, suggest the next action in one short sentence.
-       Example output:
-       Escalate as a high-priority bug for the mobile team.
-       Log as positive feedback to share with design and marketing.
-       Log as enhancement request for product backlog.
-       """,
-       service=AzureChatCompletion(),
-   )
-    ```
-
-1. **에이전트 목록 반환하기** 주석 아래에 다음 코드를 추가합니다.
-
-    ```python
-   # Return a list of agents
-   return [summarizer_agent, classifier_agent, action_agent]
-    ```
-
-    이 목록의 에이전트 순서는 오케스트레이션 중에 선택한 순서입니다.
 
 ## 순차 오케스트레이션 만들기
 
-1. **main** 함수에서 **입력 태스크 초기화하기** 주석을 찾아 다음 코드를 추가합니다.
+1. **main** 함수에서 **현재 피드백 초기화** 주석을 찾아 다음 코드를 추가합니다.
     
     ```python
-   # Initialize the input task
-   task="""
-   I tried updating my profile picture several times today, but the app kept freezing halfway through the process. 
-   I had to restart it three times, and in the end, the picture still wouldn't upload. 
-   It's really frustrating and makes the app feel unreliable.
+   # Initialize the current feedback
+   feedback="""
+   I use the dashboard every day to monitor metrics, and it works well overall. 
+   But when I'm working late at night, the bright screen is really harsh on my eyes. 
+   If you added a dark mode option, it would make the experience much more comfortable.
    """
     ```
 
-1. **순차 오케스트레이션 만들기** 주석 아래에 다음 코드를 추가하여 응답 콜백으로 순차 오케스트레이션을 정의합니다.
+1. **순차 오케스트레이션 빌드하기** 주석 아래에 다음 코드를 추가하여 정의한 에이전트로 순차 오케스트레이션을 정의합니다.
 
     ```python
-   # Create a sequential orchestration
-   sequential_orchestration = SequentialOrchestration(
-       members=get_agents(),
-       agent_response_callback=agent_response_callback,
-   )
+   # Build sequential orchestration
+    workflow = SequentialBuilder().participants([summarizer, classifier, action]).build()
     ```
 
-    `agent_response_callback`(을)를 통해 오케스트레이션 중에 각 에이전트의 응답을 볼 수 있습니다.
+    에이전트는 오케스트레이션에 추가된 순서대로 피드백을 처리합니다.
 
-1. **런타임 만들고 시작하기** 주석 아래에 다음 코드를 추가합니다.
+1. **출력 실행 및 수집** 주석 아래에 다음 코드를 추가합니다.
 
     ```python
-   # Create a runtime and start it
-   runtime = InProcessRuntime()
-   runtime.start()
+   # Run and collect outputs
+   outputs: list[list[ChatMessage]] = []
+   async for event in workflow.run_stream(f"Customer feedback: {feedback}"):
+       if isinstance(event, WorkflowOutputEvent):
+           outputs.append(cast(list[ChatMessage], event.data))
     ```
 
-1. **작업 및 런타임을 사용하여 오케스트레이션 호출하기** 주석 아래에 다음 코드를 추가합니다.
+    이 코드는 오케스트레이션을 실행하고 참여하는 각 에이전트가 출력한 내용을 수집합니다.
+
+1. **출력 표시** 주석 아래에 다음 코드를 추가합니다.
 
     ```python
-   # Invoke the orchestration with a task and the runtime
-   orchestration_result = await sequential_orchestration.invoke(
-       task=task,
-       runtime=runtime,
-   )
+   # Display outputs
+   if outputs:
+       for i, msg in enumerate(outputs[-1], start=1):
+           name = msg.author_name or ("assistant" if msg.role == Role.ASSISTANT else "user")
+           print(f"{'-' * 60}\n{i:02d} [{name}]\n{msg.text}")
     ```
 
-1. **결과 기다리기** 주석아래에 다음 코드를 추가합니다.
-
-    ```python
-   # Wait for the results
-   value = await orchestration_result.get(timeout=20)
-   print(f"\n****** Task Input ******{task}")
-   print(f"***** Final Result *****\n{value}")
-    ```
-
-    이 코드에서는 오케스트레이션의 결과를 검색하고 표시합니다. 지정된 시간 제한 내에 오케스트레이션이 완료되지 않으면 시간 제한 예외가 throw됩니다.
-
-1. **유휴 상태일 때 런타임 중지하기** 주석을 찾아 다음 코드를 추가합니다.
-
-    ```python
-   # Stop the runtime when idle
-   await runtime.stop_when_idle()
-    ```
-
-    처리가 완료되면 런타임을 중지하여 리소스를 정리합니다.
+    이 코드는 오케스트레이션에서 수집한 워크플로 출력의 메시지를 형식 지정하고 표시합니다.
 
 1. **CTRL+S** 명령을 사용하여 변경 내용을 코드 파일에 저장합니다. 파일을 열어 두거나(오류를 수정하기 위해 코드를 편집해야 하는 경우) **Ctrl+Q** 명령을 사용하여 Cloud Shell 명령줄을 열어 둔 채 코드 편집기를 닫습니다.
 
@@ -279,23 +231,25 @@ Azure AI 파운드리 프로젝트에 모델을 배포하는 것부터 시작해
     다음과 비슷한 결과가 나타나야 합니다.
 
     ```output
-    # SummarizerAgent
-    App freezes during profile picture upload, preventing completion.
-    # ClassifierAgent
-    Negative
-    # ActionAgent
-    Escalate as a high-priority bug for the development team.
+    ------------------------------------------------------------
+    01 [user]
+    Customer feedback:
+        I use the dashboard every day to monitor metrics, and it works well overall.
+        But when I'm working late at night, the bright screen is really harsh on my eyes.
+        If you added a dark mode option, it would make the experience much more comfortable.
 
-    ****** Task Input ******
-    I tried updating my profile picture several times today, but the app kept freezing halfway through the process.
-    I had to restart it three times, and in the end, the picture still wouldn't upload.
-    It's really frustrating and makes the app feel unreliable.
-
-    ***** Final Result *****
-    Escalate as a high-priority bug for the development team.
+    ------------------------------------------------------------
+    02 [summarizer]
+    User requests a dark mode for better nighttime usability.
+    ------------------------------------------------------------
+    03 [classifier]
+    Feature request
+    ------------------------------------------------------------
+    04 [action]
+    Log as enhancement request for product backlog.
     ```
 
-1. 필요에 따라 다음과 같은 다른 작업 입력을 사용하여 코드를 실행해 볼 수 있습니다.
+1. 필요에 따라 다음과 같은 다른 피드백 입력을 사용하여 코드를 실행해 볼 수 있습니다.
 
     ```output
     I use the dashboard every day to monitor metrics, and it works well overall. But when I'm working late at night, the bright screen is really harsh on my eyes. If you added a dark mode option, it would make the experience much more comfortable.
@@ -306,7 +260,7 @@ Azure AI 파운드리 프로젝트에 모델을 배포하는 것부터 시작해
 
 ## 요약
 
-이번 연습에서는 의미 체계 커널 SDK를 사용해 순차 오케스트레이션을 연습하여 여러 에이전트를 간소화된 단일 워크플로로 결합해 보았습니다. 잘했습니다!
+이번 연습에서는 Microsoft 에이전트 프레임워크 SDK로 순차 오케스트레이션을 연습하여 여러 에이전트를 간소화된 단일 워크플로로 결합해 보았습니다. 잘했습니다!
 
 ## 정리
 
