@@ -125,7 +125,7 @@ Azure AI 파운드리 프로젝트에 모델을 배포하는 것부터 시작해
    import asyncio
    from typing import cast
    from agent_framework import ChatMessage, Role, SequentialBuilder, WorkflowOutputEvent
-   from agent_framework.azure import AzureOpenAIChatClient
+   from agent_framework.azure import AzureAIAgentClient
    from azure.identity import AzureCliCredential
     ```
 
@@ -135,10 +135,15 @@ Azure AI 파운드리 프로젝트에 모델을 배포하는 것부터 시작해
 
     ```python
    # Create the chat client
-   chat_client = AzureOpenAIChatClient(credential=AzureCliCredential())
+   credential = AzureCliCredential()
+   async with (
+       AzureAIAgentClient(async_credential=credential) as chat_client,
+   ):
     ```
 
 1. **에이전트 만들기** 주석 아래에 다음 코드를 추가합니다.
+
+    (들여쓰기 수준을 유지해야 합니다.)
 
     ```python
    # Create agents
@@ -162,6 +167,8 @@ Azure AI 파운드리 프로젝트에 모델을 배포하는 것부터 시작해
 
 1. **main** 함수에서 **현재 피드백 초기화** 주석을 찾아 다음 코드를 추가합니다.
     
+    (들여쓰기 수준을 유지해야 합니다.)
+
     ```python
    # Initialize the current feedback
    feedback="""
@@ -175,7 +182,7 @@ Azure AI 파운드리 프로젝트에 모델을 배포하는 것부터 시작해
 
     ```python
    # Build sequential orchestration
-    workflow = SequentialBuilder().participants([summarizer, classifier, action]).build()
+   workflow = SequentialBuilder().participants([summarizer, classifier, action]).build()
     ```
 
     에이전트는 오케스트레이션에 추가된 순서대로 피드백을 처리합니다.
