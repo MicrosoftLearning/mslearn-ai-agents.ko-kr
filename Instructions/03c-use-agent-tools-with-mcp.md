@@ -28,7 +28,13 @@ lab:
     - **Azure AI 파운드리 리소스**: *Azure AI 파운드리 리소스의 유효한 이름*
     - **구독**: ‘Azure 구독’
     - **리소스 그룹**: ‘리소스 그룹 만들기 또는 선택’
-    - **지역**: **AI 서비스 지원 위치 *선택***\*
+    - **지역**: *지원되는 다음 위치 중에서 선택합니다.* \* 
+      * 미국 서부 2
+      * 미국 서부
+      * 노르웨이 동부
+      * 스위스 북부
+      * 아랍에미리트 북부
+      * 인도 남부
 
     > \* 일부 Azure AI 리소스는 지역 모델 할당량에 의해 제한됩니다. 연습 후반부에 할당량 한도를 초과하는 경우 다른 지역에서 다른 리소스를 만들어야 할 수도 있습니다.
 
@@ -43,7 +49,7 @@ lab:
 
     ![Azure AI 파운드리 프로젝트 개요 페이지의 스크린샷.](./Media/ai-foundry-project.png)
 
-1. 클라이언트 응용 프로그램에서 프로젝트에 연결하는 데 사용하므로 **Azure AI 파운드리 프로젝트 엔드포인트** 값을 메모장에 복사합니다.
+1. **Azure AI Foundry 프로젝트 엔드포인트** 값을 복사합니다. 이 엔드포인트를 사용하여 클라이언트 응용 프로그램에서 프로젝트에 연결할 수 있습니다.
 
 ## MCP 함수 도구를 사용하는 에이전트 개발
 
@@ -109,13 +115,21 @@ AI 파운드리에서 프로젝트를 만들었으므로 이제 AI 에이전트�
 
 이 작업을 통해 원격 MCP 서버에 연결하고, AI 에이전트를 준비하고, 사용자 프롬프트를 실행하게 됩니다.
 
+1. 제공된 코드 파일을 편집하려면 다음 명령을 입력합니다.
+
+    ```
+   code client.py
+    ```
+
+    코드 편집기에서 파일이 열립니다.
+
 1. **Add references** 주석을 찾고 다음 코드를 추가하여 클래스를 가져옵니다.
 
     ```python
    # Add references
    from azure.identity import DefaultAzureCredential
    from azure.ai.agents import AgentsClient
-   from azure.ai.agents.models import McpTool
+   from azure.ai.agents.models import McpTool, ToolSet, ListSortOrder
     ```
 
 1. **Connect to the agents client** 주석을 찾아 다음 코드를 추가하여 현재 Azure 자격 증명을 사용하여 Azure AI 프로젝트에 연결합니다.
@@ -136,25 +150,29 @@ AI 파운드리에서 프로젝트를 만들었으므로 이제 AI 에이전트�
     ```python
    # Initialize agent MCP tool
    mcp_tool = McpTool(
-       server_label=mcp_server_label,
-       server_url=mcp_server_url,
+        server_label=mcp_server_label,
+        server_url=mcp_server_url,
    )
+    
+   mcp_tool.set_approval_mode("never")
+    
+   toolset = ToolSet()
+   toolset.add(mcp_tool)
     ```
 
     이 코드는 Microsft Learn Docs 원격 MCP 서버에 연결됩니다. 이는 클라이언트가 Microsoft 공식 문서에서 직접 신뢰할 수 있고 최신 정보에 액세스할 수 있도록 하는 클라우드에 호스트된 서비스입니다.
 
-1. **mcp 도구 정의를 사용하여 새 에이전트 만들기** 주석 아래에 다음 코드를 추가합니다.
+1. **새 에이전트 만들기** 주석을 찾고 다음 코드를 추가합니다.
 
     ```python
-   # Create a new agent with the mcp tool definitions
+   # Create a new agent
    agent = agents_client.create_agent(
-       model=model_deployment,
-       name="my-mcp-agent",
-       instructions="""
+        model=model_deployment,
+        name="my-mcp-agent",
+        instructions="""
         You have access to an MCP server called `microsoft.docs.mcp` - this tool allows you to 
         search through Microsoft's latest official documentation. Use the available MCP tools 
-        to answer questions and perform tasks.""",
-       tools=mcp_tool.definitions,
+        to answer questions and perform tasks."""
    )
     ```
 
@@ -172,33 +190,20 @@ AI 파운드리에서 프로젝트를 만들었으므로 이제 AI 에이전트�
 
     ```python
    # Create a message on the thread
+   prompt = input("\nHow can I help?: ")
    message = agents_client.messages.create(
-       thread_id=thread.id,
-       role="user",
-       content="Give me the Azure CLI commands to create an Azure Container App with a managed identity.",
+        thread_id=thread.id,
+        role="user",
+        content=prompt,
    )
    print(f"Created message, ID: {message.id}")
     ```
 
-1. **mcp 도구 헤더 업데이트** 주석 아래에 다음 코드를 추가합니다.
-
-    ```python
-   # Update mcp tool headers
-   mcp_tool.update_headers("SuperSecret", "123456")
-    ```
-
-1. **승인 모드 설정** 주석을 찾아 다음 코드를 추가합니다.
-
-    ```python
-   # Set approval mode
-   mcp_tool.set_approval_mode("never")
-    ```
-
-1. **MCP 도구를 사용하여 스레드에서 실행되는 에이전트 만들기 및 처리** 주석을 찾아 다음 코드를 추가합니다.
+1. **MCP 도구를 사용하여 스레드에서 실행되는 에이전트 만들기 및 처리** 주석을 찾고 다음 코드를 추가합니다.
 
     ```python
    # Create and process agent run in thread with MCP tools
-   run = agents_client.runs.create_and_process(thread_id=thread.id, agent_id=agent.id, tool_resources=mcp_tool.resources)
+   run = agents_client.runs.create_and_process(thread_id=thread.id, agent_id=agent.id, toolset=toolset)
    print(f"Created run, ID: {run.id}")
     ```
     
@@ -226,7 +231,13 @@ AI 파운드리에서 프로젝트를 만들었으므로 이제 AI 에이전트�
    python client.py
     ```
 
-    다음과 비슷한 결과가 나타나야 합니다.
+1. 메시지가 표시되면 다음과 같은 기술 정보에 대한 요청을 입력합니다.
+
+    ```
+    Give me the Azure CLI commands to create an Azure Container App with a managed identity.
+    ```
+
+1. 에이전트가 MCP 서버를 사용하여 요청된 정보를 검색하는 데 적합한 도구를 찾아 프롬프트를 처리할 때까지 기다립니다. 다음과 비슷한 결과가 나타나야 합니다.
 
     ```
     Created agent, ID: <<agent-id>>
@@ -251,25 +262,28 @@ AI 파운드리에서 프로젝트를 만들었으므로 이제 AI 에이전트�
     ---
 
     ### **1. Create a Resource Group**
-    ```azurecli
+    '''azurecli
     az group create --name myResourceGroup --location eastus
+    '''
+    
+
+    {{continued...}}
+
+    By following these steps, you can deploy an Azure Container App with either system-assigned or user-assigned managed identities to integrate seamlessly with other Azure services.
+    --------------------------------------------------
+    USER: Give me the Azure CLI commands to create an Azure Container App with a managed identity.
+    --------------------------------------------------
+    Deleted agent
     ```
 
-    {{계속...}}
+    에이전트가 MCP 도구 `microsoft_docs_search`를 자동으로 호출하여 요청을 이행할 수 있었음을 확인하세요.
 
-    이러한 단계를 따르면, 시스템 할당 또는 사용자 할당한 관리 ID를 사용하여 Azure Container App을 배포하고 다른 Azure 서비스와 원활하게 통합할 수 있습니다.
-    --------------------------------------------------
-    사용자: 관리 ID를 사용하여 Azure Container App을 만드는 Azure CLI 명령을 제공합니다.
-    --------------------------------------------------
-    삭제된 에이전트
-    ```
+1. `python client.py` 명령을 사용해 앱을 다시 실행하여 다른 정보를 요청할 수 있습니다. 에이전트는 매번 MCP 도구를 사용하여 기술 설명서 찾기를 시도합니다.
 
-    Notice that the agent was able to invoke the MCP tool `microsoft_docs_search` automatically to fulfill the request.
+## 정리
 
-## Clean up
+연습을 마쳤으므로 불필요한 리소스 사용을 방지하기 위해 만든 클라우드 리소스를 삭제해야 합니다.
 
-Now that you've finished the exercise, you should delete the cloud resources you've created to avoid unnecessary resource usage.
-
-1. Open the [Azure portal](https://portal.azure.com) at `https://portal.azure.com` and view the contents of the resource group where you deployed the hub resources used in this exercise.
-1. On the toolbar, select **Delete resource group**.
-1. Enter the resource group name and confirm that you want to delete it.
+1. [Azure Portal](https://portal.azure.com)을 `https://portal.azure.com`에서 열고 이 연습에서 사용한 허브 리소스를 배포한 리소스 그룹의 내용을 확인합니다.
+1. 도구 모음에서 **리소스 그룹 삭제**를 선택합니다.
+1. 리소스 그룹 이름을 입력하고 삭제할 것인지 확인합니다.

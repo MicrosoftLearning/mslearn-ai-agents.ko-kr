@@ -1,14 +1,12 @@
 ---
 lab:
-  title: 의미 체계 커널 SDK를 사용하여 Azure AI 에이전트 개발
-  description: 의미 체계 커널 SDK를 사용하여 Azure AI 에이전트 서비스 에이전트를 만들고 사용하는 방법을 알아봅니다.
+  title: Microsoft 에이전트 프레임워크 SDK로 Azure AI 에이전트 개발하기
+  description: Microsoft 에이전트 프레임워크 SDK를 사용하여 Azure AI 채팅 에이전트를 만들고 사용하는 방법을 알아봅니다.
 ---
 
-# 의미 체계 커널 SDK를 사용하여 Azure AI 에이전트 개발
+# Microsoft 에이전트 프레임워크 SDK로 Azure AI 채팅 에이전트 개발하기
 
-이 연습에서는 Azure AI 에이전트 서비스 및 의미 체계 커널을 사용하여 비용 클레임을 처리하는 AI 에이전트를 만듭니다.
-
-> **팁**: 이 연습에서 사용되는 코드는 Python용 의미 체계 커널 SDK를 기준으로 합니다. Microsoft .NET 및 Java용 SDK를 사용하여 유사한 솔루션을 개발할 수 있습니다. 자세한 내용은 [지원되는 의미 체계 커널 언어](https://learn.microsoft.com/semantic-kernel/get-started/supported-languages)를 참조하세요.
+이 연습에서는 Azure AI 에이전트 서비스 및 Microsoft 에이전트 프레임워크를 사용하여 비용 클레임을 처리하는 AI 에이전트를 만듭니다.
 
 이 연습을 완료하는 데 약 **30**분 정도 소요됩니다.
 
@@ -29,7 +27,7 @@ Azure AI 파운드리 프로젝트에 모델을 배포하는 것부터 시작해
     - **Azure AI 파운드리 리소스**: *Azure AI 파운드리 리소스의 유효한 이름*
     - **구독**: ‘Azure 구독’
     - **리소스 그룹**: ‘리소스 그룹 만들기 또는 선택’
-    - **지역**: **AI 서비스 지원 위치 *선택***\*
+    - **지역**: ***AI Foundry 권장 사항 선택***\*
 
     > \* 일부 Azure AI 리소스는 지역 모델 할당량에 의해 제한됩니다. 연습 후반부에 할당량 한도를 초과하는 경우 다른 지역에서 다른 리소스를 만들어야 할 수도 있습니다.
 
@@ -72,7 +70,7 @@ Azure AI 파운드리 프로젝트에 모델을 배포하는 것부터 시작해
 1. 리포지토리가 복제된 경우 다음 명령을 입력하여 작업 디렉터리를 코드 파일이 포함된 폴더로 변경하고 모두 나열합니다.
 
     ```
-   cd ai-agents/Labfiles/04-semantic-kernel/python
+   cd ai-agents/Labfiles/04-agent-framework/python
    ls -a -l
     ```
 
@@ -85,10 +83,8 @@ Azure AI 파운드리 프로젝트에 모델을 배포하는 것부터 시작해
     ```
    python -m venv labenv
    ./labenv/bin/Activate.ps1
-   pip install python-dotenv azure-identity semantic-kernel --upgrade 
+   pip install azure-identity agent-framework
     ```
-
-    > **참고**: *semantic-kernel*을 설치하면 *azure-ai-projects*의 의미 체계 커널 호환 버전이 자동으로 설치됩니다.
 
 1. 제공된 구성 파일을 편집하려면 다음 명령을 입력합니다.
 
@@ -108,98 +104,60 @@ Azure AI 파운드리 프로젝트에 모델을 배포하는 것부터 시작해
 1. 제공된 에이전트 코드 파일을 편집하려면 다음 명령을 입력합니다.
 
     ```
-   code semantic-kernel.py
+   code agent-framework.py
     ```
 
 1. 이 파일의 코드를 검토합니다. 여기에는 다음이 포함됩니다.
     - 일반적으로 사용되는 네임스페이스에 대한 참조를 추가하는 일부 **import** 문
     - 비용 데이터가 포함된 파일을 로드하고 사용자에게 지침을 요청한 다음 호출하는 *main* 함수입니다.
     - 에이전트를 만들고 사용하는 코드를 추가해야 하는 **process_expenses_data** 함수
-    - 에이전트가 이메일 전송에 사용되는 기능을 시뮬레이션하는 데 사용할 **send_email**이라는 커널 함수가 포함된 **EmailPlugin** 클래스입니다.
 
 1. 파일 상단에서 기존 **import** 문 뒤의 **Add references** 주석을 찾아 다음 코드를 추가하여 에이전트를 구현하는 데 필요한 라이브러리의 네임스페이스를 참조합니다.
 
     ```python
    # Add references
-   from dotenv import load_dotenv
-   from azure.identity.aio import DefaultAzureCredential
-   from semantic_kernel.agents import AzureAIAgent, AzureAIAgentSettings, AzureAIAgentThread
-   from semantic_kernel.functions import kernel_function
+   from agent_framework import AgentThread, ChatAgent
+   from agent_framework.azure import AzureAIAgentClient
+   from azure.identity.aio import AzureCliCredential
+   from pydantic import Field
    from typing import Annotated
     ```
 
-1. 파일 하단에서 **Create a Plugin for the email functionality** 주석을 찾아 다음 코드를 추가하여 에이전트가 이메일을 보내는 데 사용할 함수가 포함된 플러그인의 클래스를 정의합니다(플러그인은 의미 체계 커널 에이전트에 사용자 지정 기능을 추가하는 방법입니다).
+1. 파일 하단에서 **이메일 기능을 위한 도구 함수 만들기** 주석을 찾아 다음 코드를 추가하여 에이전트가 이메일을 보내는 데 사용할 함수를 정의합니다(도구는 에이전트에 사용자 지정 기능을 추가하는 방법입니다).
 
     ```python
-   # Create a Plugin for the email functionality
-   class EmailPlugin:
-       """A Plugin to simulate email functionality."""
-    
-       @kernel_function(description="Sends an email.")
-       def send_email(self,
-                      to: Annotated[str, "Who to send the email to"],
-                      subject: Annotated[str, "The subject of the email."],
-                      body: Annotated[str, "The text body of the email."]):
-           print("\nTo:", to)
-           print("Subject:", subject)
-           print(body, "\n")
+   # Create a tool function for the email functionality
+   def send_email(
+    to: Annotated[str, Field(description="Who to send the email to")],
+    subject: Annotated[str, Field(description="The subject of the email.")],
+    body: Annotated[str, Field(description="The text body of the email.")]):
+        print("\nTo:", to)
+        print("Subject:", subject)
+        print(body, "\n")
     ```
 
     > **참고**: 이 함수는 이메일을 콘솔에 출력하여 이메일 전송을 *시뮬레이션*합니다. 실제 애플리케이션에서는 SMTP 서비스 또는 이와 유사한 서비스를 사용하여 실제로 이메일을 보냅니다.
 
-1. 새 **EmailPlugin** 클래스 코드 위에 있는 **create_expense_claim** 함수에서 **Get configuration settings** 주석을 찾아 다음 코드를 추가하여 구성 파일을 로드하고 **AzureAIAgentSettings** 개체(구성에서 Azure AI 에이전트 설정을 자동으로 포함함)를 만듭니다.
+1. **send_email** 코드 위쪽 부분을 백업하고, **process_expenses_data** 함수에서 **채팅 에이전트 만들기** 주석을 찾아 다음 코드를 추가하여 도구와 지침이 포함된 **ChatAgent** 개체를 만듭니다.
 
     (들여쓰기 수준을 유지해야 합니다.)
 
     ```python
-   # Get configuration settings
-   load_dotenv()
-   ai_agent_settings = AzureAIAgentSettings()
-    ```
-
-1. **Connect to the Azure AI Foundry project** 주석을 찾아 다음 코드를 추가하여 현재 로그인한 Azure 자격 증명을 사용하여 Azure AI 파운드리 프로젝트에 연결합니다.
-
-    (들여쓰기 수준을 유지해야 합니다.)
-
-    ```python
-   # Connect to the Azure AI Foundry project
+   # Create a chat agent
    async with (
-        DefaultAzureCredential(
-            exclude_environment_credential=True,
-            exclude_managed_identity_credential=True) as creds,
-        AzureAIAgent.create_client(
-            credential=creds
-        ) as project_client,
+       AzureCliCredential() as credential,
+       ChatAgent(
+           chat_client=AzureAIAgentClient(async_credential=credential),
+           name="expenses_agent",
+           instructions="""You are an AI assistant for expense claim submission.
+                           When a user submits expenses data and requests an expense claim, use the plug-in function to send an email to expenses@contoso.com with the subject 'Expense Claim`and a body that contains itemized expenses with a total.
+                           Then confirm to the user that you've done so.""",
+           tools=send_email,
+       ) as agent,
    ):
     ```
 
-1. **Define an Azure AI agent that sends an expense claim email** 주석을 찾아 다음 코드를 추가하여 에이전트에 대한 Azure AI 에이전트 정의를 만듭니다.
-
-    (들여쓰기 수준을 유지해야 합니다.)
-
-    ```python
-   # Define an Azure AI agent that sends an expense claim email
-   expenses_agent_def = await project_client.agents.create_agent(
-        model= ai_agent_settings.model_deployment_name,
-        name="expenses_agent",
-        instructions="""You are an AI assistant for expense claim submission.
-                        When a user submits expenses data and requests an expense claim, use the plug-in function to send an email to expenses@contoso.com with the subject 'Expense Claim`and a body that contains itemized expenses with a total.
-                        Then confirm to the user that you've done so."""
-   )
-    ```
-
-1. **Create a semantic kernel agent** 주석을 찾아 다음 코드를 추가하여 Azure AI 에이전트에 대한 의미 체계 커널 에이전트 개체를 만들고, **EmailPlugin** 플러그인에 대한 참조를 포함합니다.
-
-    (들여쓰기 수준을 유지해야 합니다.)
-
-    ```python
-   # Create a semantic kernel agent
-   expenses_agent = AzureAIAgent(
-        client=project_client,
-        definition=expenses_agent_def,
-        plugins=[EmailPlugin()]
-   )
-    ```
+    **AzureCliCredential** 개체는 구성의 Azure AI Foundry 프로젝트 설정을 자동으로 포함한다는 점에 유의하세요.
 
 1. **Use the agent to process the expenses data** 주석을 찾아 다음 코드를 추가하여 에이전트가 실행할 스레드를 만든 다음 채팅 메시지로 호출합니다.
 
@@ -207,23 +165,16 @@ Azure AI 파운드리 프로젝트에 모델을 배포하는 것부터 시작해
 
     ```python
    # Use the agent to process the expenses data
-   # If no thread is provided, a new thread will be
-   # created and returned with the initial response
-   thread: AzureAIAgentThread | None = None
    try:
-        # Add the input prompt to a list of messages to be submitted
-        prompt_messages = [f"{prompt}: {expenses_data}"]
-        # Invoke the agent for the specified thread with the messages
-        response = await expenses_agent.get_response(prompt_messages, thread=thread)
-        # Display the response
-        print(f"\n# {response.name}:\n{response}")
+       # Add the input prompt to a list of messages to be submitted
+       prompt_messages = [f"{prompt}: {expenses_data}"]
+       # Invoke the agent for the specified thread with the messages
+       response = await agent.run(prompt_messages)
+       # Display the response
+       print(f"\n# Agent:\n{response}")
    except Exception as e:
-        # Something went wrong
-        print (e)
-   finally:
-        # Cleanup: Delete the thread and agent
-        await thread.delete() if thread else None
-        await project_client.agents.delete_agent(expenses_agent.id)
+       # Something went wrong
+       print (e)
     ```
 
 1. 각 코드 블록의 기능을 이해하는 데 도움이 되는 주석을 사용하여 에이전트용의 완성된 코드를 검토한 다음 코드 변경 내용을 저장합니다(**CTRL+S**).
@@ -245,7 +196,7 @@ Azure AI 파운드리 프로젝트에 모델을 배포하는 것부터 시작해
 1. 로그인한 후 다음 명령을 입력하여 애플리케이션을 실행합니다.
 
     ```
-   python semantic-kernel.py
+   python agent-framework.py
     ```
     
     애플리케이션은 인증된 Azure 세션에 대한 자격 증명을 사용하여 실행하여 프로젝트에 연결하고 에이전트를 만들고 실행합니다.
@@ -262,7 +213,7 @@ Azure AI 파운드리 프로젝트에 모델을 배포하는 것부터 시작해
 
 ## 요약
 
-이 연습에서는 Azure AI 에이전트 서비스 SDK 및 의미 체계 커널을 사용하여 에이전트를 만들었습니다.
+이번 연습에서는 Microsoft 에이전트 프레임워크 SDK를 사용해 사용자 지정 도구로 에이전트를 만들어 보았습니다.
 
 ## 정리
 
