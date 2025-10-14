@@ -141,6 +141,8 @@ Azure AI 파운드리 프로젝트에 모델을 배포하는 것부터 시작해
    ):
     ```
 
+    **AzureCliCredential** 개체를 사용하면 코드에서 Azure 계정에 인증할 수 있습니다. **AzureAIAgentClient** 개체는 .env 구성의 Azure AI Foundry 프로젝트 설정을 자동으로 포함합니다.
+
 1. **에이전트 만들기** 주석 아래에 다음 코드를 추가합니다.
 
     (들여쓰기 수준을 유지해야 합니다.)
