@@ -68,7 +68,7 @@ lab:
 
 1. 모델 카탈로그에서 **gpt-4o** 모델을 찾습니다(검색 창을 사용하여 신속하게 찾을 수 있음).
 
-    ![Azure AI Foundry VS Code 확장의 모델 카탈로그 스크린샷](media/vs-code-model.png)
+    ![Azure AI Foundry VS Code 확장의 모델 카탈로그 스크린샷](Media/vs-code-model.png)
 
 1. gpt-4o 모델 옆에 있는 **Azure에서 배포**를 선택합니다.
 
@@ -92,7 +92,7 @@ lab:
 
 1. **에이전트** 하위 섹션 옆에 있는 **+**(더하기) 아이콘을 선택하여 새 AI 에이전트를 만듭니다.
 
-    ![Azure AI Foundry VS Code 확장에서 에이전트를 만드는 스크린샷](media/vs-code-new-agent.png)
+    ![Azure AI Foundry VS Code 확장에서 에이전트를 만드는 스크린샷](Media/vs-code-new-agent.png)
 
 1. 메시지가 표시되면 에이전트 파일을 저장할 위치를 선택합니다.
 
@@ -117,7 +117,7 @@ lab:
 
 1. 디자이너의 **도구** 섹션에서 오른쪽 위 모서리에 있는 **도구 추가** 단추를 선택합니다.
 
-![Azure AI Foundry VS Code 확장의 에이전트에 도구를 추가하는 스크린샷](media/vs-code-agent-tools.png)
+![Azure AI Foundry VS Code 확장의 에이전트에 도구를 추가하는 스크린샷](Media/vs-code-agent-tools.png)
 
 1. 드롭다운 메뉴에서 **MCP 서버**를 선택합니다.
 
