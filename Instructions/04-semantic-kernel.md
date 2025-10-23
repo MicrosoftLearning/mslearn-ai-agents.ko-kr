@@ -157,7 +157,7 @@ Azure AI 파운드리 프로젝트에 모델을 배포하는 것부터 시작해
    ):
     ```
 
-    **AzureCliCredential** 개체는 구성의 Azure AI Foundry 프로젝트 설정을 자동으로 포함한다는 점에 유의하세요.
+    **AzureCliCredential** 개체를 사용하면 코드에서 Azure 계정에 인증할 수 있습니다. **AzureAIAgentClient** 개체는 .env 구성의 Azure AI Foundry 프로젝트 설정을 자동으로 포함합니다.
 
 1. **Use the agent to process the expenses data** 주석을 찾아 다음 코드를 추가하여 에이전트가 실행할 스레드를 만든 다음 채팅 메시지로 호출합니다.
 

@@ -199,6 +199,15 @@ AI 파운드리에서 프로젝트를 만들었으므로 이제 AI 에이전트�
    print(f"Created message, ID: {message.id}")
     ```
 
+1. **승인 모드 설정** 주석을 찾아 다음 코드를 추가합니다.
+
+    ```python
+    # Set approval mode
+    mcp_tool.set_approval_mode("never")
+    ```
+
+    이렇게 하면 에이전트가 사용자 승인 없이 MCP 도구를 자동으로 호출할 수 있습니다. 승인을 요구하려면 `mcp_tool.update_headers`를 사용하여 헤더 값을 제공해야 합니다.
+
 1. **MCP 도구를 사용하여 스레드에서 실행되는 에이전트 만들기 및 처리** 주석을 찾고 다음 코드를 추가합니다.
 
     ```python
