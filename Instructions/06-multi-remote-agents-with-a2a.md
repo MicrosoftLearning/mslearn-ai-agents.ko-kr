@@ -108,7 +108,7 @@ lab:
     ```
    python -m venv labenv
    ./labenv/bin/Activate.ps1
-   pip install -r requirements.txt azure-ai-projects a2a-sdk
+   pip install -r requirements.txt azure-ai-projects azure-ai-agents a2a-sdk
     ```
 
 1. 제공된 구성 파일을 편집하려면 다음 명령을 입력합니다.
