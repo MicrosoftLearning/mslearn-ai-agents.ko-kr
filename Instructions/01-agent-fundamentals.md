@@ -1,29 +1,31 @@
 ---
 lab:
   title: AI 에이전트 개발 살펴보기
-  description: Azure AI 파운드리 포털에서 Azure AI 에이전트 서비스를 살펴보고 AI 에이전트 개발의 첫 번째 단계를 수행합니다.
+  description: Microsoft Foundry 포털에서 Azure AI 에이전트 서비스를 탐색하여 AI 에이전트를 개발하는 첫 번째 단계를 수행합니다.
 ---
 
 # AI 에이전트 개발 살펴보기
 
-이 연습에서는 Azure AI 파운드리 포털의 Azure AI 에이전트 서비스를 사용하여 직원의 비용 청구를 지원하는 간단한 AI 에이전트를 만듭니다.
+이 연습에서는 Microsoft Foundry 포털의 Azure AI 에이전트 서비스를 사용하여 직원들의 비용 청구를 지원하는 간단한 AI 에이전트를 만듭니다.
 
 이 연습에는 약 **30**분이 소요됩니다.
 
 > **참고**: 이 연습에 사용된 일부 기술은 미리 보기이거나 현재 개발 중에 있습니다. 예기치 않은 동작, 경고 또는 오류가 발생할 수 있습니다.
 
-## Azure AI 파운드리 프로젝트 및 에이전트 만들기
+## Foundry 프로젝트 및 에이전트 만들기
 
-먼저 Azure AI 파운드리 프로젝트를 만들어 보겠습니다.
+먼저 Foundry 프로젝트를 만들어 보겠습니다.
 
-1. 웹 브라우저에서 [Azure AI 파운드리 포털](https://ai.azure.com)(`https://ai.azure.com`)을 열고 Azure 자격 증명을 사용하여 로그인합니다. 처음 로그인할 때 열리는 팁이나 빠른 시작 창을 닫고, 필요한 경우 왼쪽 위에 있는 **Azure AI 파운드리** 로고를 사용하여 다음 이미지와 유사한 홈페이지로 이동합니다(**도움말** 창이 열려 있는 경우 닫습니다).
+1. 웹 브라우저에서 [Foundry 포털](https://ai.azure.com)(`https://ai.azure.com`)을 열고 Azure 자격 증명을 사용하여 로그인합니다. 처음 로그인할 때 열리는 팁이나 빠른 시작 창을 닫고, 필요한 경우 왼쪽 위에 있는 **Foundry** 로고를 사용하여 다음 이미지와 유사한 홈페이지로 이동합니다(**도움말** 창이 열려 있으면 닫기).
 
-    ![Azure AI Foundry 포털의 스크린샷.](./Media/ai-foundry-home.png)
+    ![Foundry 포털의 스크린샷](./Media/ai-foundry-home.png)
+
+    > **중요**: 이 랩에서는 **새 Foundry** 토글이 *꺼짐* 상태인지 확인합니다.
 
 1. 홈페이지에서 **에이전트 만들기**를 선택합니다.
 1. 프로젝트를 만들라는 메시지가 표시되면 프로젝트의 유효한 이름을 입력합니다.
 1. **고급 옵션**을 확장하고 다음 설정을 지정합니다.
-    - **Azure AI 파운드리 리소스**: *Azure AI 파운드리 리소스의 유효한 이름*
+    - **Foundry 리소스**: *Foundry 리소스의 유효한 이름*
     - **구독**: ‘Azure 구독’
     - **리소스 그룹**: *리소스 그룹을 선택하거나 새로 만들기*
     - **지역**: ****AI Foundry 권장 사항 선택***\**
@@ -37,7 +39,7 @@ lab:
 
 1. 프로젝트가 생성되면 에이전트 플레이그라운드가 자동으로 열리므로 모델을 선택하거나 배포할 수 있습니다.
 
-    ![Azure AI 파운드리 프로젝트 에이전트 플레이그라운드의 스크린샷.](./Media/ai-foundry-agents-playground.png)
+    ![Foundry 프로젝트 에이전트 플레이그라운드의 스크린샷](./Media/ai-foundry-agents-playground.png)
 
     >**참고**: 에이전트 및 프로젝트를 만들 때 GPT-4o 베이스 모델이 자동으로 배포됩니다.
 
@@ -57,7 +59,7 @@ lab:
    If a user wants to submit an expense claim, you get their email address, a description of the claim, and the amount to be claimed and write the claim details to a text file that the user can download.
     ```
 
-    ![Azure AI 파운드리 포털의 AI 에이전트 설정 페이지 스크린샷.](./Media/ai-agent-setup.png)
+    ![Foundry 포털의 AI 에이전트 설정 페이지 스크린샷](./Media/ai-agent-setup.png)
 
 1. **설정** 창을 아래로 내려 **지식** 머리글 옆에 있는 **+추가**를 선택합니다. 그런 다음 **지식 추가** 대화 상자에서 **파일**을 선택합니다.
 1. **파일 추가** 대화 상자에서 `Expenses_Vector_Store`(이)라는 이름의 새로운 벡터 저장소를 생성하고, 이전에 다운로드한 **Expenses_policy.docx** 로컬 파일을 업로드하여 저장합니다.
@@ -79,7 +81,7 @@ lab:
 1. 청구 및 금액을 설명하는 프롬프트를 제출합니다(예: `Breakfast cost me $20`).
 1. 에이전트는 코드 인터프리터를 사용하여 비용 청구 텍스트 파일을 준비하고, 사용자가 파일을 다운로드할 수 있는 링크를 제공해야 합니다.
 
-    ![Azure AI 파운드리 포털의 에이전트 플레이그라운드 스크린샷.](./Media/ai-agent-playground.png)
+    ![Foundry 포털의 에이전트 플레이그라운드 스크린샷](./Media/ai-agent-playground.png)
 
 1. 텍스트 문서를 다운로드하고 열어 비용 청구 세부 정보를 확인합니다.
 

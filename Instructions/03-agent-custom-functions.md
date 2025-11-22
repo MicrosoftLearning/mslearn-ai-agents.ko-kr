@@ -8,24 +8,26 @@ lab:
 
 이 연습에서는 사용자 지정 함수를 도구로 사용하여 작업을 완료할 수 있는 에이전트를 만드는 방법을 살펴봅니다. 기술 문제에 대한 세부 정보를 수집하고 지원 티켓을 생성할 수 있는 간단한 기술 지원 에이전트를 빌드합니다.
 
-> **팁**: 이 연습에서 사용되는 코드는 Python용 Azure AI 파운드리를 기준으로 합니다. Microsoft .NET, JavaScript 및 Java용 SDK를 사용하여 유사한 솔루션을 개발할 수 있습니다. 자세한 내용은 [Azure AI 파운드리 SDK 클라이언트 라이브러리](https://learn.microsoft.com/azure/ai-foundry/how-to/develop/sdk-overview)를 참조하세요.
+> **팁**: 이 연습에서 사용되는 코드는 Python용 Microsoft Foundry SDK를 기반으로 합니다. Microsoft .NET, JavaScript 및 Java용 SDK를 사용하여 유사한 솔루션을 개발할 수 있습니다. 자세한 내용은 [Microsoft Foundry SDK 클라이언트 라이브러리](https://learn.microsoft.com/azure/ai-foundry/how-to/develop/sdk-overview)를 참조하세요.
 
 이 연습을 완료하는 데 약 **30**분 정도 소요됩니다.
 
 > **참고**: 이 연습에 사용된 일부 기술은 미리 보기이거나 현재 개발 중에 있습니다. 예기치 않은 동작, 경고 또는 오류가 발생할 수 있습니다.
 
-## Azure AI 파운드리 프로젝트 만들기
+## Foundry 프로젝트 만들기
 
-먼저 Azure AI 파운드리 프로젝트를 만들어 보겠습니다.
+먼저 Foundry 프로젝트를 만들어 보겠습니다.
 
-1. 웹 브라우저에서 [Azure AI 파운드리 포털](https://ai.azure.com)(`https://ai.azure.com`)을 열고 Azure 자격 증명을 사용하여 로그인합니다. 처음 로그인할 때 열리는 팁이나 빠른 시작 창을 닫고, 필요한 경우 왼쪽 위에 있는 **Azure AI 파운드리** 로고를 사용하여 다음 이미지와 유사한 홈페이지로 이동합니다(**도움말** 창이 열려 있는 경우 닫습니다).
+1. 웹 브라우저에서 [Foundry 포털](https://ai.azure.com)(`https://ai.azure.com`)을 열고 Azure 자격 증명을 사용하여 로그인합니다. 처음 로그인할 때 열리는 팁이나 빠른 시작 창을 닫고, 필요한 경우 왼쪽 위에 있는 **Foundry** 로고를 사용하여 다음 이미지와 유사한 홈페이지로 이동합니다(**도움말** 창이 열려 있으면 닫기).
 
-    ![Azure AI Foundry 포털의 스크린샷.](./Media/ai-foundry-home.png)
+    ![Foundry 포털의 스크린샷](./Media/ai-foundry-home.png)
+
+    > **중요**: 이 랩에서는 **새 Foundry** 토글이 *꺼짐* 상태인지 확인합니다.
 
 1. 홈페이지에서 **에이전트 만들기**를 선택합니다.
 1. 프로젝트를 만들라는 메시지가 표시되면 프로젝트의 유효한 이름을 입력하고 **고급 옵션**을 펼칩니다.
 1. 프로젝트에 대한 다음 설정을 확인합니다.
-    - **Azure AI 파운드리 리소스**: *Azure AI 파운드리 리소스의 유효한 이름*
+    - **Foundry 리소스**: *Foundry 리소스의 유효한 이름*
     - **구독**: ‘Azure 구독’
     - **리소스 그룹**: ‘리소스 그룹 만들기 또는 선택’
     - **지역**: ***AI Foundry 권장 사항 선택***\*
@@ -41,9 +43,9 @@ lab:
 
 1. 왼쪽 탐색 창에서 **개요**를 선택하면 다음과 같은 프로젝트의 메인 페이지가 표시됩니다.
 
-    ![Azure AI 파운드리 프로젝트 개요 페이지의 스크린샷.](./Media/ai-foundry-project.png)
+    ![Foundry 프로젝트 개요 페이지의 스크린샷](./Media/ai-foundry-project.png)
 
-1. 클라이언트 응용 프로그램에서 프로젝트에 연결하는 데 사용하므로 **Azure AI 파운드리 프로젝트 엔드포인트** 값을 메모장에 복사합니다.
+1. **Foundry 프로젝트 엔드포인트** 값을 메모장에 복사합니다. 이 값을 사용하여 클라이언트 응용 프로그램에서 프로젝트에 연결할 것입니다.
 
 ## 함수 도구를 사용하는 에이전트 개발
 
@@ -51,7 +53,7 @@ AI 파운드리에서 프로젝트를 만들었으므로 이제 사용자 지정
 
 ### 애플리케이션 코드가 포함된 리포지토리 복제
 
-1. 새 브라우저 탭을 엽니다(Azure AI 파운드리 포털을 기존 탭에서 열어 두기). 그런 다음 새 탭에서 [Azure Portal](https://portal.azure.com)(`https://portal.azure.com`)을 열고 메시지가 나타나면 Azure 자격 증명을 사용하여 로그인합니다.
+1. 새 브라우저 탭을 엽니다(기존 탭에서는 Foundry 포털을 열어 둔 상태로 유지). 그런 다음 새 탭에서 [Azure Portal](https://portal.azure.com)(`https://portal.azure.com`)을 열고 메시지가 나타나면 Azure 자격 증명을 사용하여 로그인합니다.
 
     Azure Portal 홈페이지를 보려면 환영 알림을 닫습니다.
 
@@ -103,7 +105,7 @@ AI 파운드리에서 프로젝트를 만들었으므로 이제 사용자 지정
 
     코드 편집기에서 파일이 열립니다.
 
-1. 코드 파일에서 **your_project_endpoint** 자리 표시자를 프로젝트의 엔드포인트(Azure AI Foundry 포털의 프로젝트 **개요** 페이지에서 복사됨)로 바꾸고 MODEL_DEPLOYMENT_NAME 변수가 모델 배포 이름(*gpt-4o*)으로 설정되어 있는지 확인합니다.
+1. 코드 파일에서 **your_project_endpoint** 자리 표시자를 프로젝트의 엔드포인트(Foundry 포털의 프로젝트 **개요** 페이지에서 복사)로 바꾸고 MODEL_DEPLOYMENT_NAME 변수가 모델 배포 이름(*gpt-4o*여야 함)으로 설정되어 있는지 확인합니다.
 1. 자리 표시자를 바꾼 후에는 **CTRL+S** 명령을 사용하여 변경 내용을 저장한 다음 **CTRL+Q** 명령을 사용하여 Cloud Shell 명령줄을 열어둔 상태에서 코드 편집기를 닫습니다.
 
 ### 사용자 지정 함수 정의
@@ -279,7 +281,7 @@ AI 파운드리에서 프로젝트를 만들었으므로 이제 사용자 지정
 
     > **참고**: 대부분의 시나리오에서는 *az login*을 사용하는 것만으로도 충분합니다. 그러나 여러 테넌트에 구독이 있는 경우 *--tenant* 매개 변수를 사용하여 테넌트 지정해야 할 수 있습니다. 자세한 내용은 [Sign into Azure interactively using the Azure CLI](https://learn.microsoft.com/cli/azure/authenticate-azure-cli-interactively)를 참조하세요.
     
-1. 메시지가 표시되면 지침에 따라 새 탭에서 로그인 페이지를 열고 제공된 인증 코드와 Azure 자격 증명을 입력합니다. 그런 다음 명령줄에서 로그인 프로세스를 완료하고 메시지가 표시되면 Azure AI 파운드리 허브가 포함된 구독을 선택합니다.
+1. 메시지가 표시되면 지침에 따라 새 탭에서 로그인 페이지를 열고 제공된 인증 코드와 Azure 자격 증명을 입력합니다. 그런 다음, 메시지가 표시되면 Foundry 허브가 포함된 구독을 선택하여 명령줄에서 로그인 프로세스를 완료합니다.
 1. 로그인한 후 다음 명령을 입력하여 애플리케이션을 실행합니다.
 
     ```
